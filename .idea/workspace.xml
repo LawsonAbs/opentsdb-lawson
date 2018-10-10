@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="aff1a2d2-fadf-4ab6-b419-6856711803af" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Aggregator.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Aggregator.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Query.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Query.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/RateOptions.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/RateOptions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/TSDB.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/TSDB.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Tags.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/Tags.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/TsdbQuery.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/core/TsdbQuery.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/graph/Plot.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/graph/Plot.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/tools/CliQuery.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/tools/CliQuery.java" />
-    </list>
+    <list default="true" id="aff1a2d2-fadf-4ab6-b419-6856711803af" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -607,12 +598,12 @@
       <workItem from="1538994681107" duration="5846000" />
       <workItem from="1539003059234" duration="3371000" />
       <workItem from="1539006468210" duration="12183000" />
-      <workItem from="1539160160863" duration="7556000" />
+      <workItem from="1539160160863" duration="7865000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="161417000" />
+    <option name="totallyTimeSpent" value="161726000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="54" y="-8" width="1874" height="1096" extended-state="6" />
