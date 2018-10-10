@@ -143,6 +143,7 @@ public final class Plot {
 
   /**
    * Sets the global parameters for this plot.
+   * 为这个plot设置全局的参数
    *
    * @param params Each entry is a Gnuplot setting that will be written as-is
    * in the Gnuplot script file: {@code set KEY VALUE}.

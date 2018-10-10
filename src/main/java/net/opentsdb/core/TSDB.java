@@ -820,6 +820,9 @@ public final class TSDB {
   
   /**
    * Returns a new {@link Query} instance suitable for this TSDB.
+   * 为这个TSDB对象返回一个Query实例
+   *
+   * //其实还是调用TsdQuery()这个构造函数
    */
   public Query newQuery() {
     return new TsdbQuery(this);

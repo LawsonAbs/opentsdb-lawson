@@ -137,7 +137,9 @@ final class TsdbQuery implements Query {
   /** Whether or not to match series with ONLY the given tags */
   private boolean explicit_tags;
   
-  /** Constructor. */
+  /** Constructor.
+   * fuzzy:模糊的
+   * */
   public TsdbQuery(final TSDB tsdb) {
     this.tsdb = tsdb;
     enable_fuzzy_filter = tsdb.getConfig()

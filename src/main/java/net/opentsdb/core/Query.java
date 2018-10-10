@@ -23,6 +23,7 @@ import net.opentsdb.uid.NoSuchUniqueName;
 
 /**
  * A query to retrieve data from the TSDB.
+ * 从TSDB检索数据的查询
  */
 public interface Query {
 
@@ -201,6 +202,8 @@ public interface Query {
 
   /**
    * Runs this query.
+   * 运行这个查询
+   *
    * @return The data points matched by this query.
    * <p>
    * Each element in the non-{@code null} but possibly empty array returned

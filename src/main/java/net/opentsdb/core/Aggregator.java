@@ -18,10 +18,16 @@ import net.opentsdb.core.Aggregators.Interpolation;
 
 /**
  * A function capable of aggregating multiple {@link DataPoints} together.
+ * 一个有能力聚合多个DataPoints到一起的函数
+ *
+ *
  * <p>
  * All aggregators must be stateless.  All they can do is run through a
  * sequence of {@link Longs Longs} or {@link Doubles Doubles} and return an
  * aggregated value.
+ * 所有的聚合函数必须是没有状态的。所有它们该做的是：运行完一列Longs或者Doubles并且
+ * 返回一个聚合值。
+ *
  */
 public abstract class Aggregator {
   

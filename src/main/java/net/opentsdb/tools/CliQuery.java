@@ -56,9 +56,11 @@ final class CliQuery {
     System.exit(retval);
   }
 
+
   public static void main(String[] args) throws Exception {
     ArgP argp = new ArgP();
-    CliOptions.addCommon(argp);
+
+    CliOptions.addCommon(argp);//addCommon(argp)是将一些比较常用的参数放到argp中
     CliOptions.addVerbose(argp);
     argp.addOption("--graph", "BASEPATH",
                    "Output data points to a set of files for gnuplot."
@@ -77,13 +79,14 @@ final class CliQuery {
     final TSDB tsdb = new TSDB(config);
     tsdb.checkNecessaryTablesExist().joinUninterruptibly();
     final String basepath = argp.get("--graph");
-    argp = null;
+    argp = null;//但是我不知道为什么这里让argp 置为null？【难道是因为有很多个argp需要解析，是避免argp干扰】
 
-    Plot plot = null;
+    Plot plot = null;//声明一个plot引用
     try {
-      plot = doQuery(tsdb, args, basepath != null);
+      plot = doQuery(tsdb, args, basepath != null);//doQuery是本类中下面的这个doQuery()方法
     } finally {
       try {
+        //shutdown()这个方法有很多地方需要研究！！！！
         tsdb.shutdown().joinUninterruptibly();
       } catch (Exception e) {
         LOG.error("Unexpected exception", e);
@@ -105,24 +108,40 @@ final class CliQuery {
   private static Plot doQuery(final TSDB tsdb,
                               final String args[],
                               final boolean want_plot) {
-    final ArrayList<String> plotparams = new ArrayList<String>();
-    final ArrayList<Query> queries = new ArrayList<Query>();
-    final ArrayList<String> plotoptions = new ArrayList<String>();
+    final ArrayList<String> plotparams = new ArrayList<String>();//画图需要的参数
+    final ArrayList<Query> queries = new ArrayList<Query>();//Query 是一个接口
+    final ArrayList<String> plotoptions = new ArrayList<String>();//画图的选项
+
+      // 本类中的方法
+      //这个可以对参数queries,plotparams, plotoptions等进行修改
     parseCommandLineQuery(args, tsdb, queries, plotparams, plotoptions);
+
+    //如果没有指定查询 -> 打印用法并退出
     if (queries.isEmpty()) {
       usage(null, "Not enough arguments, need at least one query.", 2);
     }
 
+    //接着开始画图
+      //定义一个plot对象，如果want_plot为true，则获取queries的startTime和endTIme，否则将plot指为null
     final Plot plot = (want_plot ? new Plot(queries.get(0).getStartTime(),
                                             queries.get(0).getEndTime())
                        : null);
+
+    //这个表示的是开始画图
     if (want_plot) {
       plot.setParams(parsePlotParams(plotparams));
     }
+
+    //nqueries表示n queries，即查询的个数
     final int nqueries = queries.size();
+
+    //并行化执行n个query
     for (int i = 0; i < nqueries; i++) {
       // TODO(tsuna): Optimization: run each query in parallel.
       final StringBuilder buf = want_plot ? null : new StringBuilder();
+
+      //queries.get(i)得到的是一个Query 对象
+      //所以，run()方法就是
       for (final DataPoints datapoints : queries.get(i).run()) {
         if (want_plot) {
           plot.add(datapoints, plotoptions.get(i));
@@ -151,6 +170,8 @@ final class CliQuery {
 
   /**
    * Parses the query from the command lines.
+   * 解析来自命令行的查询
+   *
    * @param args The command line arguments.
    * @param tsdb The TSDB to use.
    * @param queries The list in which {@link Query}s will be appended.
@@ -159,17 +180,23 @@ final class CliQuery {
    * @param plotoptions The list in which per-line plot options will be
    * appended.  Ignored if {@code null}.
    */
+
+  //按照i的次数进行解析
   static void parseCommandLineQuery(final String[] args,
                                     final TSDB tsdb,
                                     final ArrayList<Query> queries,
                                     final ArrayList<String> plotparams,
                                     final ArrayList<String> plotoptions) {
+
+    //获取start_time
     long start_ts = DateTime.parseDateTimeString(args[0], null);
     if (start_ts >= 0)
-      start_ts /= 1000;
-    long end_ts = -1;
+      start_ts /= 1000; //get second rather than milli second
+
+      long end_ts = -1;
     if (args.length > 3){
       // see if we can detect an end time
+        //验证是否能够获取一个end time
       try{
       if (args[1].charAt(0) != '+'
            && (args[1].indexOf(':') >= 0
@@ -188,7 +215,12 @@ final class CliQuery {
     if (end_ts >= 0)
       end_ts /= 1000;
 
+      //为什么这里使用的是end_ts与0比较？
+      //因为end_ts的默认值是-1，如果没有修改该值，所以end_ts<0  => args参数中不存在end_time字段 将i设置成1
+      // 反之end_ts >= 0，args参数中存在end_time字段 将i设置成2
     int i = end_ts < 0 ? 1 : 2;
+
+    //这个部分添加的应该是聚合参数【我不确定】
     while (i < args.length && args[i].charAt(0) == '+') {
       if (plotparams != null) {
         plotparams.add(args[i]);
@@ -196,8 +228,15 @@ final class CliQuery {
       i++;
     }
 
+
     while (i < args.length) {
-      final Aggregator agg = Aggregators.get(args[i++]);
+        //注意这里是Aggregators 而不是Aggregator。
+        //在Aggregators 这个类中有一个实例：private static final HashMap<String, Aggregator> aggregators;
+        //map的映射关系是String -> Aggregator
+        //根据args[i++] = name 获取一个Aggregator 对象；Aggregators只不过是一个方法类而已【相当于ArrayUtils】
+        final Aggregator agg = Aggregators.get(args[i++]);//聚合参数
+      //执行完上面的语句，然后执行i++操作
+
       final boolean rate = args[i].equals("rate");
       RateOptions rate_options = new RateOptions(false, Long.MAX_VALUE,
           RateOptions.DEFAULT_RESET_VALUE);
@@ -218,14 +257,19 @@ final class CliQuery {
           i++;
         }
       }
+
+      //是否downsample
       final boolean downsample = args[i].equals("downsample");
       if (downsample) {
         i++;
       }
+
+      //如果有downsample，那么就去args[i++]的值，否则取0【因为没有interval】
       final long interval = downsample ? Long.parseLong(args[i++]) : 0;
       final Aggregator sampler = downsample ? Aggregators.get(args[i++]) : null;
-      final String metric = args[i++];
-      final HashMap<String, String> tags = new HashMap<String, String>();
+
+      final String metric = args[i++];//获取metric
+      final HashMap<String, String> tags = new HashMap<String, String>();//获取tag对
       while (i < args.length && args[i].indexOf(' ', 1) < 0
              && args[i].indexOf('=', 1) > 0) {
         Tags.parse(tags, args[i++]);
@@ -233,26 +277,31 @@ final class CliQuery {
       if (i < args.length && args[i].indexOf(' ', 1) > 0) {
         plotoptions.add(args[i++]);
       }
+
+      //构建了一个query对象，这个query对象中有一个当前tsdb对象的引用
       final Query query = tsdb.newQuery();
-      query.setStartTime(start_ts);
+      query.setStartTime(start_ts);//设置查询起始时间
       if (end_ts > 0) {
-        query.setEndTime(end_ts);
+        query.setEndTime(end_ts);//设置查询结束时间
       }
-      query.setTimeSeries(metric, tags, agg, rate, rate_options);
+      query.setTimeSeries(metric, tags, agg, rate, rate_options);//设置时间序列的一系列值
       if (downsample) {
         query.downsample(interval, sampler);
       }
-      queries.add(query);
+      queries.add(query);//难道有多个query被添加到queries中？【这个地方稍有不理解】
     }
   }
 
+
+
+  //解析画图的参数
   private static HashMap<String, String> parsePlotParams(final ArrayList<String> params) {
     final HashMap<String, String> result =
-      new HashMap<String, String>(params.size());
+      new HashMap<String, String>(params.size());//分配一个params这样的大小map
+
     for (final String param : params) {
-      Tags.parse(result, param.substring(1));
+      Tags.parse(result, param.substring(1));//借用Tags这个类将params处理
     }
     return result;
   }
-
 }

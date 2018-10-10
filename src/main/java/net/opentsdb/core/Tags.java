@@ -76,6 +76,8 @@ public final class Tags {
 
   /**
    * Parses a tag into a HashMap.
+   * 将一个tag解析成一个HashMap
+   *
    * @param tags The HashMap into which to store the tag.
    * @param tag A String of the form "tag=value".
    * @throws IllegalArgumentException if the tag is malformed.
