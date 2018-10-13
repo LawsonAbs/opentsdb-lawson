@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 /**
  * A histogram to keep track of the approximation of a distribution of values.
+ * 一个直方图，用于跟踪值的近似分布
  * <p>
  * This is not a general purpose implementation of histogram.  It's
  * specifically designed for "small" values (close to 0) as the primary
@@ -152,6 +153,7 @@ public final class Histogram {
 
   /**
    * Adds a value to the histogram.
+   * 添加一个值到这个图形中
    * <p>
    * This method works in {@code O(1)}.
    * @param value The value to add.

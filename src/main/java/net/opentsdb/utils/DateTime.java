@@ -52,6 +52,8 @@ public class DateTime {
   /**
    * Attempts to parse a timestamp from a given string
    * Formats accepted are:
+   * 尝试解析一个timestamp从一个给定的字符串
+   *
    * <ul>
    * <li>Relative: {@code 5m-ago}, {@code 1h-ago}, etc. See 
    * {@link #parseDuration}</li>

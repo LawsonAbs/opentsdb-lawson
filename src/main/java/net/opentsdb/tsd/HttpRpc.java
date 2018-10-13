@@ -18,11 +18,12 @@ import net.opentsdb.core.TSDB;
 
 /**
  * Base interface for all built-in HTTP query handlers.
+ * 对于所有内置HTTP 查询请求处理的基础接口
  */
 interface HttpRpc {
 
   /**
-   * Executes this RPC.
+   * Executes this RPC.执行这个RPC
    * @param tsdb The TSDB to use.
    * @param query The HTTP query to execute.
    */

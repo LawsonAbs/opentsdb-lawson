@@ -496,6 +496,9 @@ final class QueryRpc implements HttpRpc {
   
   /**
    * Parses a query string legacy style query from the URI
+   * 从URI解析查询
+   *
+   *
    * @param tsdb The TSDB we belong to
    * @param query The HTTP Query for parsing
    * @return A TSQuery if parsing was successful
@@ -518,6 +521,10 @@ final class QueryRpc implements HttpRpc {
    */
   public static TSQuery parseQuery(final TSDB tsdb, final HttpQuery query,
       final List<ExpressionTree> expressions) {
+
+    //新生成一个 TSQuery对象，然后将query的参数各种注入到此对象中
+    //String query -> HashMap<String,String> -> Query query
+    //都是这样的套路来完成整个过程的变化
     final TSQuery data_query = new TSQuery();
     
     data_query.setStart(query.getRequiredQueryStringParam("start"));
@@ -559,6 +566,8 @@ final class QueryRpc implements HttpRpc {
     if (query.hasQueryStringParam("tsuid")) {
       final List<String> tsuids = query.getQueryStringParams("tsuid");     
       for (String q : tsuids) {
+
+        //tsuid 是什么，这里我还不大清楚
         parseTsuidTypeSubQuery(q, data_query);
       }
     }

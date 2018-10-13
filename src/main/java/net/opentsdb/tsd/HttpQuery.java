@@ -53,9 +53,12 @@ import com.stumbleupon.async.Deferred;
 
 /**
  * Binds together an HTTP request and the channel on which it was received.
+ * 将一个HTTP请求和接收到的通道绑定在一起。
  *
  * It makes it easier to provide a few utility methods to respond to the
  * requests.
+ * HttpQuery使得提供一些实用方法去响应请求变得简单
+ *
  */
 final class HttpQuery extends AbstractHttpQuery {
 
@@ -600,8 +603,12 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Send a file (with zero-copy) to the client with a 200 OK status.
+   * 发送一个文件（零拷贝）到客户端，ok状态是200.
+   *
    * This method doesn't provide any security guarantee.  The caller is
    * responsible for the argument they pass in.
+   * 这个方法不提供任何的安全保障。调用者对这个传入的参数负责
+   *
    * @param path The path to the file to send to the client.
    * @param max_age The expiration time of this entity, in seconds.  This is
    * not a timestamp, it's how old the resource is allowed to be in the client

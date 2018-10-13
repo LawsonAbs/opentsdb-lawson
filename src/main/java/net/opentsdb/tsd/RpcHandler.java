@@ -245,6 +245,9 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
    * Finds the right handler for an HTTP query (either built-in or user plugin) 
    * and executes it. Also handles simple and pre-flight CORS requests if 
    * configured, rejecting requests that do not match a domain in the list.
+   * 寻找对于一个Http query的正确的handler（要么是内建的或者是用户插件）并且去执行它。同时处理简单的并且
+   * pre-flight CORS 请求，如果已配置的话，拒绝与list中不匹配域的请求
+   *
    * @param chan The channel on which the query was received.
    * @param req The parsed HTTP request.
    */

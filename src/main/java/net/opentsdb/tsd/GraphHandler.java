@@ -76,7 +76,9 @@ final class GraphHandler implements HttpRpc {
   private static final Histogram graphlatency =
     new Histogram(16000, (short) 2, 100);
 
-  /** Keep track of the latency (in ms) introduced by running Gnuplot. */
+  /** Keep track of the latency (in ms) introduced by running Gnuplot.
+   * 跟踪由于运行Gnuplot导致的延迟
+   * */
   private static final Histogram gnuplotlatency =
     new Histogram(16000, (short) 2, 100);
 
@@ -131,6 +133,9 @@ final class GraphHandler implements HttpRpc {
   // net.opentsdb.tsd.QueryRpc.java (which actually does this asynchronously),
   // so we should refactor both classes to split the actual logic used to
   // generate the data from the actual visualization (removing all duped code).
+    //net.opentsdb.tsd.QueryRpc 这个类实际上异步执行，所以我们应该重构所有的类去分离实际的逻辑，
+    //用于生产数据来自实际的可视化（移除所有的duped代码）
+//查看query的构造过程：
   private void doGraph(final TSDB tsdb, final HttpQuery query)
     throws IOException {
     final String basepath = getGnuplotBasePath(tsdb, query);
@@ -138,6 +143,8 @@ final class GraphHandler implements HttpRpc {
       query.getRequiredQueryStringParam("start"),
       query.getQueryStringParam("tz"));
     final boolean nocache = query.hasQueryStringParam("nocache");
+
+    //如果没有start_time，将会抛出missingParameter错误
     if (start_time == -1) {
       throw BadRequestException.missingParameter("start");
     } else {
@@ -163,9 +170,9 @@ final class GraphHandler implements HttpRpc {
       return;
     }
 
-    // Parse TSQuery from HTTP query
+    // Parse TSQuery from HTTP query【解析来自HTTP query 的TSQuery】
     //这个地方会打印出一堆消息，如下：需要再研究一下。
-    /*
+    /*下面这个内容就是本方法中 参数query的值：
       GET /q?start=2018/10/01-00:00:00&ignore=8&m=sum:csdn&o=&yrange=%5B0:%5D&wxh=1838x787&style=linespoint&json HTTP/1.1
       Host: 192.168.211.2:4399
       User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:62.0) Gecko/20100101 Firefox/62.0
@@ -177,7 +184,7 @@ final class GraphHandler implements HttpRpc {
       Connection: keep-alive, chan=[id: 0xbfd4e5ae, /192.168.211.2:13836 => /192.168.211.2:4399], querystring={start=[2018/10/01-00:00:00], m=[sum:csdn], o=[], yrange=[[0:]], wxh=[1838x787], style=[linespoint], json=[]}}
      */
     final TSQuery tsquery = QueryRpc.parseQuery(tsdb, query);
-    tsquery.validateAndSetQuery();
+    tsquery.validateAndSetQuery();//验证这个query是否有效
 
     // Build the queries for the parsed TSQuery
     Query[] tsdbqueries = tsquery.buildQueries(tsdb);
@@ -206,10 +213,14 @@ final class GraphHandler implements HttpRpc {
     }
 
     //从start_time -> end_time开始画图
+    //声明一个Plot对象
     final Plot plot = new Plot(start_time, end_time,
           DateTime.timezones.get(query.getQueryStringParam("tz")));
+
+    //setPlotDimensions 和 setPlotParams 都是本类中的【静态】方法
     setPlotDimensions(query, plot);
     setPlotParams(query, plot);
+
     final int nqueries = tsdbqueries.length;
     @SuppressWarnings("unchecked")
     final HashSet<String>[] aggregated_tags = new HashSet[nqueries];
@@ -265,12 +276,16 @@ final class GraphHandler implements HttpRpc {
       Annotation.getGlobalAnnotations(tsdb, start_time, end_time)
               .addCallback(new GlobalCB()).addErrback(new ErrorCB());
     } else {
-      execGnuplot(rungnuplot, query);
+      execGnuplot(rungnuplot, query);//执行这个语句 然后生成.gnuplot文件
     }
   }
 
   private void execGnuplot(RunGnuplot rungnuplot, HttpQuery query) {
     try {
+      //为什么是gnuplot.execute()?
+      //execute(Runnable command)，其中的参数是Runable 类型的command
+      //传入到这里的runGnuplot 是RunGnuplot类型，但是RunGnuplot实现了Runnable 接口
+      //execute():Executes the given task sometime in the future.在将来的某个时候执行给出的任务
       gnuplot.execute(rungnuplot);
     } catch (RejectedExecutionException e) {
       query.internalError(new Exception("Too many requests pending,"
@@ -280,14 +295,18 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Decides how long we're going to allow the client to cache our response.
+   * 允许客户端缓存我们响应的时间长度
+   *
    * <p>
    * Based on the query, we'll decide whether or not we want to allow the
    * client to cache our response and for how long.
-   * @param query The query to serve.
+   * 基于此查询，这个方法将会决定我们是否允许客户端缓存我们的响应，如果允许了，这个查询响应将会缓存多久？
+   *
+   * @param query The query to serve. 需要执行的查询
    * @param start_time The start time on the query (32-bit unsigned int, secs).
    * @param end_time The end time on the query (32-bit unsigned int, seconds).
    * @param now The current time (32-bit unsigned int, seconds).
-   * @return A positive integer, in seconds.
+   * @return A positive integer, in seconds. 一个以秒为单位的正整数
    */
   private static int computeMaxAge(final HttpQuery query,
                                    final long start_time, final long end_time,
@@ -315,6 +334,8 @@ final class GraphHandler implements HttpRpc {
   }
 
   // Runs Gnuplot in a subprocess to generate the graph.
+  // 运行Gnuplot在一个子进程，去生成图形
+  //可以看到这个内部类实现了Runable类【再次研究Runnable类】
   private static final class RunGnuplot implements Runnable {
 
     private final HttpQuery query;
@@ -324,6 +345,7 @@ final class GraphHandler implements HttpRpc {
     private final HashSet<String>[] aggregated_tags;
     private final int npoints;
 
+    //构造函数
     public RunGnuplot(final HttpQuery query,
                       final int max_age,
                       final Plot plot,
@@ -333,14 +355,17 @@ final class GraphHandler implements HttpRpc {
       this.query = query;
       this.max_age = max_age;
       this.plot = plot;
-      if (IS_WINDOWS)
-        this.basepath = basepath.replace("\\", "\\\\").replace("/", "\\\\");
+      if (IS_WINDOWS) {  //搞不懂为啥要换成\\\\分隔符？
+          this.basepath = basepath.replace("\\", "\\\\").replace("/", "\\\\");
+          System.out.println("\n\nThe basepath is :" + this.basepath + "\n\n");
+      }
       else
         this.basepath = basepath;
       this.aggregated_tags = aggregated_tags;
       this.npoints = npoints;
     }
 
+    //执行run()方法
     public void run() {
       try {
         execute();
@@ -358,7 +383,10 @@ final class GraphHandler implements HttpRpc {
     }
 
     private void execute() throws IOException {
+      //runGnuplot()方法也是本类中的静态方法
+      //返回值作为nplotted，表示画的点数
       final int nplotted = runGnuplot(query, basepath, plot);
+
       if (query.hasQueryStringParam("json")) {
         final HashMap<String, Object> results = new HashMap<String, Object>();
         results.put("plotted", nplotted);
@@ -402,23 +430,34 @@ final class GraphHandler implements HttpRpc {
     collector.record("http.graph.requests", graphs_generated, "cache=miss");
   }
 
-  /** Returns the base path to use for the Gnuplot files. */
+  /** Returns the base path to use for the Gnuplot files.
+   * 返回为了使用Gnuplot文件的基本路径
+   * */
   private String getGnuplotBasePath(final TSDB tsdb, final HttpQuery query) {
     final Map<String, List<String>> q = query.getQueryString();
     q.remove("ignore");
+
+
     // Super cheap caching mechanism: hash the query string.
+      //这里需要理解为什么重新new一个HashMap<String,List<String>>
+      //qs的大小和q的大小不同？难道是因为q.remove("ignore")操作导致的？
     final HashMap<String, List<String>> qs =
       new HashMap<String, List<String>>(q);
-    // But first remove the parameters that don't influence the output.
+
+    // But first remove the parameters that don't influence the output.【首先移除不影响输出的参数】
     qs.remove("png");
     qs.remove("json");
     qs.remove("ascii");
+
+    //返回tsd.http.cachedir的目录
     return tsdb.getConfig().getDirectoryName("tsd.http.cachedir") +
         Integer.toHexString(qs.hashCode());
   }
 
   /**
    * Checks whether or not it's possible to re-serve this query from disk.
+   * 检查是否需要在磁盘重新服务此查询
+   *
    * @param query The query to serve.
    * @param end_time The end time on the query (32-bit unsigned int, seconds).
    * @param max_age The maximum time (in seconds) we wanna allow clients to
@@ -567,8 +606,12 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Reads a file into a byte array.
+   * 将一个文件读入一个字节数组
+   *
    * @param query The query being handled (for logging purposes).
+   *              被处理的query(便于写入日志)
    * @param file The file to read.
+   *            要读取的文件
    * @param max_length The maximum number of bytes to read from the file.
    * @return {@code null} if the file doesn't exist or is empty or couldn't be
    * read, otherwise a byte array of up to {@code max_length} bytes.
@@ -641,16 +684,25 @@ final class GraphHandler implements HttpRpc {
     return (HashMap<String, Object>) JSON.parseToObject(json, HashMap.class);
   }
 
-  /** Parses the {@code wxh} query parameter to set the graph dimension. */
+  /** Parses the {@code wxh} query parameter to set the graph dimension.
+   * 解析查询参数中的wxh 到图像维度
+   * wxh是什么？Width x hight [宽 * 高]
+   *
+   * */
   static void setPlotDimensions(final HttpQuery query, final Plot plot) {
     final String wxh = query.getQueryStringParam("wxh");
     if (wxh != null && !wxh.isEmpty()) {
-      final int wxhlength = wxh.length();
+      final int wxhlength = wxh.length();//图像的大小过小导致抛出异常
       if (wxhlength < 7) {  // 100x100 minimum.
         throw new BadRequestException("Parameter wxh too short: " + wxh);
       }
-      final int x = wxh.indexOf('x', 3);  // Start at 2 as min size is 100x100
-      if (x < 0) {
+
+      //因为100 是作为最小的width，所以从index = 3的下标开始找x（乘号）的位置
+      //
+        final int x = wxh.indexOf('x', 3);  // Start at 2 as min size is 100x100
+
+
+        if (x < 0) {//如果
         throw new BadRequestException("Invalid wxh parameter: " + wxh);
       }
       try {
@@ -684,6 +736,8 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Pops out of the query string the given parameter.
+   * 从给定的参数中弹出查询字符串
+   *
    * @param querystring The query string.
    * @param param The name of the parameter to pop out.
    * @return {@code null} if the parameter wasn't passed, otherwise the
@@ -700,6 +754,8 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Applies the plot parameters from the query to the given plot.
+   * 从query中获取plot参数，并应用到给出的plot对象中
+   *
    * @param query The query from which to get the query string.
    * @param plot The plot on which to apply the parameters.
    */
@@ -762,25 +818,46 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Runs Gnuplot in a subprocess to generate the graph.
+   * 新生成子进程去运行GnuPlot，从而生成一个图像
+   *
    * <strong>This function will block</strong> while Gnuplot is running.
+   * 当Gnuplot正在运行时，这个函数将会阻塞
+   *
    * @param query The query being handled (for logging purposes).
    * @param basepath The base path used for the Gnuplot files.
    * @param plot The plot object to generate Gnuplot's input files.
+   *             生成Gnuplot的输入文件的Plot对象
+   *
    * @return The number of points plotted by Gnuplot (0 or more).
+   *            由Gnuplot画的点数
+   *
    * @throws IOException if the Gnuplot files can't be written, or
    * the Gnuplot subprocess fails to start, or we can't read the
    * graph from the file it produces, or if we have been interrupted.
+   * 如果Gnuplot文件不能被写入，或者Gnuplot子进程不能启动，或者我们不能从它生成
+   * 的文件中读取图像，或者此进程被终止
+   *
    * @throws GnuplotException if Gnuplot returns non-zero.
    */
   static int runGnuplot(final HttpQuery query,
                         final String basepath,
                         final Plot plot) throws IOException {
-    final int nplotted = plot.dumpToFiles(basepath);
-    final long start_time = System.nanoTime();
-    final Process gnuplot = new ProcessBuilder(GNUPLOT,
+
+      final int nplotted = plot.dumpToFiles(basepath);
+    final long start_time = System.nanoTime();//返回当前虚拟机运行的时间 纳秒级别
+
+    //就是在下面这个地方使用了Gnuplot 来生成！！！！
+    //注意ProcessBuilder的接收参数是(String... command)
+    //GNUPLOT,  basepath+.out ,
+    //basepath 此刻的值是：G:\testdb\96e9a6dc
+    //start() ：Starts a new process using the attributes of this process builder.
+    //          使用这个进程构造器的属性
+      final Process gnuplot = new ProcessBuilder(GNUPLOT,
       basepath + ".out", basepath + ".err", basepath + ".gnuplot").start();
+
     final int rv;
     try {
+      //waitFor()的返回值：这个进程退出的代码[0代表进程正常退出；]
       rv = gnuplot.waitFor();  // Couldn't find how to do this asynchronously.
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();  // Restore the interrupted status.
@@ -795,6 +872,8 @@ final class GraphHandler implements HttpRpc {
       // running TSDs, except where ulimit -n was low (the default, 1024).
       gnuplot.destroy();
     }
+
+    //找出由于运行gnuplot导致的延迟 并将这个数据添加到gnuplotlatency中
     gnuplotlatency.add((int) ((System.nanoTime() - start_time) / 1000000));
     if (rv != 0) {
       final byte[] stderr = readFile(query, new File(basepath + ".err"),
@@ -803,7 +882,7 @@ final class GraphHandler implements HttpRpc {
       // Sometimes Gnuplot will error out but still create the file.
       //delete: Deletes the file or directory denoted by this abstract pathname.删除这个抽象的路径名表示的文件或者目录
       new File(basepath + ".png").delete();
-      if (stderr == null) {
+      if (stderr == null) {// 错误的原因就在于这个stderr == null 然后导致抛出了错误。
         throw new GnuplotException(rv);
       }
       throw new GnuplotException(new String(stderr));
@@ -917,7 +996,9 @@ final class GraphHandler implements HttpRpc {
   private static final String WRAPPER =
     IS_WINDOWS ? "mygnuplot.bat" : "mygnuplot.sh";
 
-  /** Path to the wrapper script.  */
+  /** Path to the wrapper script.
+   *  包装（Gnuplot）脚本的路径
+   * */
   private static final String GNUPLOT;
   static {
     //findGnuplotHelperScript --> 寻找Gnuplot的帮助脚本
@@ -936,7 +1017,14 @@ final class GraphHandler implements HttpRpc {
       throw new RuntimeException("Couldn't find " + WRAPPER + " on the"
         + " CLASSPATH: " + System.getProperty("java.class.path"));
     }*/
+    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
+
+    //因为上述的这个路径虽然可以通过程序，但是无法在浏览器中得到图形展示，我就尝试如下这个路径
+    //事实证明：这个语句是错误的
+    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb";
+
     final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
+
     LOG.debug("Using Gnuplot wrapper at {}", path);
     final File file = new File(path);
     final String error;
@@ -953,7 +1041,8 @@ final class GraphHandler implements HttpRpc {
       + " CLASSPATH (" + path + ") is a " + error + " file...  WTF?"
       + "  CLASSPATH=" + System.getProperty("java.class.path"));
   }
-  /*private static String findGnuplotHelperScript() {
+  /*下面这个为原始的方法
+  private static String findGnuplotHelperScript() {
       final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
       if (url == null) {
           throw new RuntimeException("Couldn't find " + WRAPPER + " on the"

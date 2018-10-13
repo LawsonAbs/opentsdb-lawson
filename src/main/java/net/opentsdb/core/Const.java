@@ -110,6 +110,7 @@ public final class Const {
 
   /**
    * Mnemonics for FileSystem.checkDirectory()
+   * Mnemonics:助记符
    */
   public static final boolean DONT_CREATE = false;
   public static final boolean CREATE_IF_NEEDED = true;

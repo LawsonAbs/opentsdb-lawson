@@ -210,17 +210,25 @@ public final class Plot {
 
   /**
    * Generates the Gnuplot script and data files.
+   * 产生Gnuplot脚本 及 数据文件
+   *
    * @param basepath The base path to use.  A number of new files will be
    * created and their names will all start with this string.
+   *                 使用到基础文件路径。大量的新文件将会被创建，并且他们的文件名将会 以这个字符串开始
+   *
    * @return The number of data points sent to Gnuplot.  This can be less
    * than the number of data points involved in the query due to things like
    * aggregation or downsampling.
+   * 返回值： 发送给Gnuplot的数据值。这个可能少于查询中的数据值，【由于像downsampling这样的聚合函数】
+   *
    * @throws IOException if there was an error while writing one of the files.
    */
   public int dumpToFiles(final String basepath) throws IOException {
     int npoints = 0;
     final int nseries = datapoints.size();
     final String datafiles[] = nseries > 0 ? new String[nseries] : null;
+
+    //检查文件夹的可写，可读性
     FileSystem.checkDirectory(new File(basepath).getParent(),
         Const.MUST_BE_WRITEABLE, Const.CREATE_IF_NEEDED);
     for (int i = 0; i < nseries; i++) {
@@ -274,6 +282,8 @@ public final class Plot {
 
   /**
    * Generates the Gnuplot script.
+   * 生成Gnuplot脚本。【这个脚本经Gnuplot运行之后，就可以得到一个.png的图形】
+   *
    * @param basepath The base path to use.
    * @param datafiles The names of the data files that need to be plotted,
    * in the order in which they ought to be plotted.  It is assumed that
@@ -416,7 +426,7 @@ public final class Plot {
         gp.write('\n');
       }
       if (nseries == 0) {
-        gp.write('0');
+        gp.write('0');//这个地方是真正的将数据写入到.gnuplot文件中【之前.gnuplot已经生成好了，但是还没有写入数据】
       }
     } finally {
       gp.close();

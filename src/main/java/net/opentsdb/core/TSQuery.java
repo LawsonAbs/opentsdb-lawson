@@ -43,7 +43,9 @@ import net.opentsdb.utils.DateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class TSQuery {
 
-  /** User given start date/time, could be relative or absolute */
+  /** User given start date/time, could be relative or absolute
+   * 为什么将这个start设置成 String类型而不是 int 型呢？
+   * */
   private String start;
   
   /** User given end date/time, could be relative, absolute or empty */
@@ -101,8 +103,9 @@ public final class TSQuery {
   
   /** The query status for tracking over all performance of this query */
   private QueryStats query_stats;
-  
+
   /**
+   * POJO : Plain Old Java Object 简单的java对象
    * Default constructor necessary for POJO de/serialization
    */
   public TSQuery() {
@@ -150,10 +153,15 @@ public final class TSQuery {
   
   /**
    * Runs through query parameters to make sure it's a valid request.
+   * 遍历查询参数确定这个query是一个有效的请求
+   *
    * This includes parsing relative timestamps, verifying that the end time is
    * later than the start time (or isn't set), that one or more metrics or
    * TSUIDs are present, etc. If no exceptions are thrown, the query is 
    * considered valid.
+   * 验证的内容包括：相对的时间戳，已经结束时间晚于start_time(或者end_time没有设置)；一到多个metrics及TSUIDs是存在的。
+   * 如果没有异常被抛出，就认为这个query是有效的
+   *
    * <b>Warning:</b> You must call this before passing it on for processing as
    * it sets the {@code start_time} and {@code end_time} fields as well as 
    * sets the {@link TSSubQuery} fields necessary for execution.
@@ -205,14 +213,21 @@ public final class TSQuery {
   
   /**
    * Compiles the TSQuery into an array of Query objects for execution.
+   * 将TSQuery编译成一个Query对象数组，便于执行
+   *
    * If the user has not set a down sampler explicitly, and they don't want 
    * millisecond resolution, then we set the down sampler to 1 second to handle
    * situations where storage may have multiple data points per second.
+   * 如果用户没有显式设置down sampler，并且不想使用一个millisecond的解析器，那么我们将会设置down sampler
+   * 到1秒去 如果有每秒存储了多个数据点 的情景
+   *
    * @param tsdb The tsdb to use for {@link TSDB#newQuery}
    * @return An array of queries
    */
   public Query[] buildQueries(final TSDB tsdb) {
     try {
+        //异步执行这个命令
+        //这个是套路，只要是类似这种的方法，都会尝试使用异步方法
       return buildQueriesAsync(tsdb).joinUninterruptibly();
     } catch (final Exception e) {
       throw new RuntimeException("Unexpected exception", e);

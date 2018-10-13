@@ -184,6 +184,7 @@ public abstract class AbstractHttpQuery {
   
   /**
    * Returns the query string parameters passed in the URI.
+   * 返回传递到URI中的查询字符串参数
    */
   public Map<String, List<String>> getQueryString() {
     if (querystring == null) {
@@ -231,7 +232,11 @@ public abstract class AbstractHttpQuery {
 
   /**
    * Returns whether or not the given query string parameter was passed.
+   * 返回 给定的查询字符串参数 是否被解析了【是->true，否->false】
+   *
    * @param paramname Name of the query string parameter to get.
+   *                  通过这个查询字符串参数去获取
+   *
    * @return {@code true} if the parameter
    */
   public boolean hasQueryStringParam(final String paramname) {
