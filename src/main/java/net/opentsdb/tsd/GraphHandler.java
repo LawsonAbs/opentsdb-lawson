@@ -166,6 +166,7 @@ final class GraphHandler implements HttpRpc {
       end_time /= 1000;
     }
     final int max_age = computeMaxAge(query, start_time, end_time, now);
+    //这个地方会加载出了一个cache in disk等。。。
     if (!nocache && isDiskCacheHit(query, end_time, max_age, basepath)) {
       return;
     }
@@ -402,6 +403,8 @@ final class GraphHandler implements HttpRpc {
         query.sendReply(JSON.serializeToBytes(results));
         writeFile(query, basepath + ".json", JSON.serializeToBytes(results));
       } else if (query.hasQueryStringParam("png")) {
+
+        //sendFile()这个有点意思
         query.sendFile(basepath + ".png", max_age);
       } else {
         query.internalError(new Exception("Should never be here!"));
@@ -867,6 +870,8 @@ final class GraphHandler implements HttpRpc {
       // descriptors and pipes.  Unless I'm blind, this isn't actually
       // documented in the Javadoc of the !@#$%^ JDK, and in Java 6 there's no
       // way to ask the stupid-ass ProcessBuilder to not create fucking pipes.
+
+
       // I think when the GC kicks in the JVM may run some kind of a finalizer
       // that closes the pipes, because I've never seen this issue on long
       // running TSDs, except where ulimit -n was low (the default, 1024).
@@ -881,6 +886,8 @@ final class GraphHandler implements HttpRpc {
 
       // Sometimes Gnuplot will error out but still create the file.
       //delete: Deletes the file or directory denoted by this abstract pathname.删除这个抽象的路径名表示的文件或者目录
+
+      //下面是我注释掉的，本来应该在这里抛出异常
       new File(basepath + ".png").delete();
       if (stderr == null) {// 错误的原因就在于这个stderr == null 然后导致抛出了错误。
         throw new GnuplotException(rv);
@@ -1009,39 +1016,39 @@ final class GraphHandler implements HttpRpc {
    * Iterate through the class path and look for the Gnuplot helper script.
    * @return The path to the wrapper script.
    */
-  private static String findGnuplotHelperScript() {
-    /*我做了如下更改！
-    1.因为这个URL无法找到，具体的原因我也不大清楚，于是我就直接使用了mygnuplot.bat所在的绝对路径
-    final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
-    if (url == null) {
-      throw new RuntimeException("Couldn't find " + WRAPPER + " on the"
-        + " CLASSPATH: " + System.getProperty("java.class.path"));
-    }*/
-    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
-
-    //因为上述的这个路径虽然可以通过程序，但是无法在浏览器中得到图形展示，我就尝试如下这个路径
-    //事实证明：这个语句是错误的
-    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb";
-
-    final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
-
-    LOG.debug("Using Gnuplot wrapper at {}", path);
-    final File file = new File(path);
-    final String error;
-    if (!file.exists()) {
-      error = "non-existent";
-    } else if (!file.canExecute()) {
-      error = "non-executable";
-    } else if (!file.canRead()) {
-      error = "unreadable";
-    } else {
-      return path;
-    }
-    throw new RuntimeException("The " + WRAPPER + " found on the"
-      + " CLASSPATH (" + path + ") is a " + error + " file...  WTF?"
-      + "  CLASSPATH=" + System.getProperty("java.class.path"));
-  }
-  /*下面这个为原始的方法
+//  private static String findGnuplotHelperScript() {
+//    /*我做了如下更改！
+//    1.因为这个URL无法找到，具体的原因我也不大清楚，于是我就直接使用了mygnuplot.bat所在的绝对路径
+//    final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
+//    if (url == null) {
+//      throw new RuntimeException("Couldn't find " + WRAPPER + " on the"
+//        + " CLASSPATH: " + System.getProperty("java.class.path"));
+//    }*/
+//    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
+//
+//    //因为上述的这个路径虽然可以通过程序，但是无法在浏览器中得到图形展示，我就尝试如下这个路径
+//    //事实证明：这个语句是错误的
+//    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb";
+//
+//    final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
+//    //  final String path = "G:\\testdb\\mygnuplot.bat";
+//    LOG.debug("Using Gnuplot wrapper at {}", path);
+//    final File file = new File(path);
+//    final String error;
+//    if (!file.exists()) {
+//      error = "non-existent";
+//    } else if (!file.canExecute()) {
+//      error = "non-executable";
+//    } else if (!file.canRead()) {
+//      error = "unreadable";
+//    } else {
+//      return path;
+//    }
+//    throw new RuntimeException("The " + WRAPPER + " found on the"
+//      + " CLASSPATH (" + path + ") is a " + error + " file...  WTF?"
+//      + "  CLASSPATH=" + System.getProperty("java.class.path"));
+//  }
+//  下面这个为原始的方法
   private static String findGnuplotHelperScript() {
       final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
       if (url == null) {
@@ -1064,7 +1071,7 @@ final class GraphHandler implements HttpRpc {
       throw new RuntimeException("The " + WRAPPER + " found on the"
               + " CLASSPATH (" + path + ") is a " + error + " file...  WTF?"
               + "  CLASSPATH=" + System.getProperty("java.class.path"));
-  }*/
+  }
 
 
   // ---------------- //
