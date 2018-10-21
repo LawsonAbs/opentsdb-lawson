@@ -380,9 +380,14 @@ public class Config {
 
   /**
    * Returns the directory name, making sure the end is an OS dependent slash
+   * 返回目录名，确保末尾是一个与OS相关的斜杠
+   *
    * @param property The property to load
+   *                 需要被加载的属性值
+   *
    * @return The property value with a forward or back slash appended or null
    * if the property wasn't found or the directory was empty.
+   * 正斜杠或者反斜杠的属性值；如果属性没有被找到或者目录为空，那么返回null
    */
   public final String getDirectoryName(final String property) {
     String directory = properties.get(property);

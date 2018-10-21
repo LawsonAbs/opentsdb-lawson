@@ -65,14 +65,24 @@ final class GraphHandler implements HttpRpc {
   private static final boolean IS_WINDOWS =
     System.getProperty("os.name", "").contains("Windows");
 
-  /** Number of times we had to do all the work up to running Gnuplot. */
+  /** Number of times we had to do all the work up to running Gnuplot.
+   * 为了运行Gnuplot，而不得不做的工作次数
+   *
+   * AtomicInteger :An int value that may be updated atomically.【一个int型数，原子更新】
+   * */
   private static final AtomicInteger graphs_generated
     = new AtomicInteger();
-  /** Number of times a graph request was served from disk, no work needed. */
+
+  /** Number of times a graph request was served from disk, no work needed.
+   * 从磁盘获取图形请求的次数，不需要任何工作
+   * */
   private static final AtomicInteger graphs_diskcache_hit
     = new AtomicInteger();
 
-  /** Keep track of the latency of graphing requests. */
+  /** Keep track of the latency of graphing requests.
+   * 记录图形请求的延迟
+   * 注意与下一个变量的区别 graphlatency graphplotlantency
+   * */
   private static final Histogram graphlatency =
     new Histogram(16000, (short) 2, 100);
 
@@ -82,7 +92,9 @@ final class GraphHandler implements HttpRpc {
   private static final Histogram gnuplotlatency =
     new Histogram(16000, (short) 2, 100);
 
-  /** Executor to run Gnuplot in separate bounded thread pool. */
+  /** Executor to run Gnuplot in separate bounded thread pool.
+   * 在单独的有界线程池中运行Gnuplot 的一个执行者
+   * */
   private final ThreadPoolExecutor gnuplot;
 
   /**
@@ -96,32 +108,54 @@ final class GraphHandler implements HttpRpc {
     // allow only one per core, and we nice it (the nicing is done in the
     // shell script we use to start Gnuplot).  Similarly, the queue we use
     // is sized so as to have a fixed backlog per core.
+    /*
+    Gnuplot主要受CPU限制，在开始读取输入数据和结束写入输出时只执行少量IO。
+    我们希望避免同时运行太多Gnuplot实例，因为它可能从我们这里窃取大量CPU周期。
+    相反，我们只允许一个内核，并对其进行了优化(在启动Gnuplot时使用的shell脚本中进行了优化)。
+    同样，我们使用的队列的大小是为了每个核心都有一个固定的backlog。
+     */
+
+    //ncores 用于表示可以运行的处理器数目
     final int ncores = Runtime.getRuntime().availableProcessors();
+
+    //获取gnuplot实例，通过ThreadPollExecutor类
     gnuplot = new ThreadPoolExecutor(
-      ncores, ncores,  // Thread pool of a fixed size.
-      /* 5m = */ 300000, MILLISECONDS,        // How long to keep idle threads.
-      new ArrayBlockingQueue<Runnable>(20 * ncores),  // XXX Don't hardcode?
-      thread_factory);
+            ncores,
+            ncores,  // Thread pool of a fixed size.
+            300000,/* 5m = */
+            MILLISECONDS,// How long to keep idle threads.
+            new ArrayBlockingQueue<Runnable>(20 * ncores),  // XXX Don't hardcode?
+            thread_factory);
     // ArrayBlockingQueue does not scale as much as LinkedBlockingQueue in terms
     // of throughput but we don't need high throughput here.  We use ABQ instead
     // of LBQ because it creates far fewer references.
+    /*
+        尽管在吞吐量上，ArrayBlockingQueue不像LinkedBlockingQueue，但是我们不需要在这里使用高吞吐量。
+        我们使用ABQ而不是LBQ是ABQ创建更少的引用
+    */
   }
 
+  //
   public void execute(final TSDB tsdb, final HttpQuery query) {
-    if (!query.hasQueryStringParam("json")
+      //如果这个query中的json,png,ascii 参数没有被解析，那么进入到代码块中进行解析
+      if (!query.hasQueryStringParam("json")
         && !query.hasQueryStringParam("png")
-        && !query.hasQueryStringParam("ascii")) {
-      String uri = query.request().getUri();
+        && !query.hasQueryStringParam("ascii")) {//【非正常流程】
+
+          //request():Returns the underlying Netty HttpRequest of this query
+          //getUri():Returns the URI (or path) of this request
+          String uri = query.request().getUri();//
       if (uri.length() < 4) {  // Shouldn't happen...
         uri = "/";             // But just in case, redirect.
       } else {
         uri = "/#" + uri.substring(3);  // Remove "/q?"
       }
+      //Redirects the client's browser to the given location.
       query.redirect(uri);
       return;
     }
     try {
-      doGraph(tsdb, query);
+      doGraph(tsdb, query);//用于执行真正的画图函数
     } catch (IOException e) {
       query.internalError(e);
     } catch (IllegalArgumentException e) {
@@ -138,7 +172,9 @@ final class GraphHandler implements HttpRpc {
 //查看query的构造过程：
   private void doGraph(final TSDB tsdb, final HttpQuery query)
     throws IOException {
+    //basepath:其实是一个存放图片的目录
     final String basepath = getGnuplotBasePath(tsdb, query);
+
     long start_time = DateTime.parseDateTimeString(
       query.getRequiredQueryStringParam("start"),
       query.getQueryStringParam("tz"));
@@ -151,6 +187,8 @@ final class GraphHandler implements HttpRpc {
       // temp fixup to seconds from ms until the rest of TSDB supports ms
       // Note you can't append this to the DateTime.parseDateTimeString() call as
       // it clobbers -1 results
+      //临时修复start_time到秒级，直到未来的TSDB支持ms
+      //注意你不能将其附加到DateTime.parseDateString()调用，因为它会将其变为-1
       start_time /= 1000;
     }
     long end_time = DateTime.parseDateTimeString(
@@ -166,7 +204,8 @@ final class GraphHandler implements HttpRpc {
       end_time /= 1000;
     }
     final int max_age = computeMaxAge(query, start_time, end_time, now);
-    //这个地方会加载出了一个cache in disk等。。。
+
+    //这个地方会加载出了一个cache in disk等
     if (!nocache && isDiskCacheHit(query, end_time, max_age, basepath)) {
       return;
     }
@@ -190,6 +229,7 @@ final class GraphHandler implements HttpRpc {
     // Build the queries for the parsed TSQuery
     Query[] tsdbqueries = tsquery.buildQueries(tsdb);
 
+    //what is paramname is o?
     List<String> options = query.getQueryStringParams("o");
     if (options == null) {
       options = new ArrayList<String>(tsdbqueries.length);
@@ -223,11 +263,13 @@ final class GraphHandler implements HttpRpc {
     setPlotParams(query, plot);
 
     final int nqueries = tsdbqueries.length;
-    @SuppressWarnings("unchecked")
-    final HashSet<String>[] aggregated_tags = new HashSet[nqueries];
-    int npoints = 0;
 
-    //下面会catch住一个异常，需要研究是什么原因。
+    @SuppressWarnings("unchecked")
+    //聚合标签
+    final HashSet<String>[] aggregated_tags = new HashSet[nqueries];
+
+    int npoints = 0;
+    //下面有时会catch住一个异常，需要研究是什么原因。
     for (int i = 0; i < nqueries; i++) {
       try {  // execute the TSDB query!
         // XXX This is slow and will block Netty.  TODO(tsuna): Don't block.
@@ -256,6 +298,7 @@ final class GraphHandler implements HttpRpc {
     final RunGnuplot rungnuplot = new RunGnuplot(query, max_age, plot, basepath,
             aggregated_tags, npoints);
 
+    //这是类ErrorCB，它实现了接口Callback
     class ErrorCB implements Callback<Object, Exception> {
       public Object call(final Exception e) throws Exception {
         LOG.warn("Failed to retrieve global annotations: ", e);
@@ -263,6 +306,7 @@ final class GraphHandler implements HttpRpc {
       }
     }
 
+    //GlobalCB 实现接口
     class GlobalCB implements Callback<Object, List<Annotation>> {
       public Object call(final List<Annotation> global_annotations) throws Exception {
         rungnuplot.plot.setGlobals(global_annotations);
@@ -283,10 +327,10 @@ final class GraphHandler implements HttpRpc {
 
   private void execGnuplot(RunGnuplot rungnuplot, HttpQuery query) {
     try {
-      //为什么是gnuplot.execute()?
+      //为什么是gnuplot.execute()?  => 执行这个命令，这个gnuplot是一个Executor
       //execute(Runnable command)，其中的参数是Runable 类型的command
-      //传入到这里的runGnuplot 是RunGnuplot类型，但是RunGnuplot实现了Runnable 接口
-      //execute():Executes the given task sometime in the future.在将来的某个时候执行给出的任务
+      //传入到这里的runGnuplot 是RunGnuplot类型，但是RunGnuplot实现了Runnable 接口，所以它可以作为execute()方法的参数
+      //execute():Executes the given task sometime in the future.【在将来的某个时候执行给出的任务】
       gnuplot.execute(rungnuplot);
     } catch (RejectedExecutionException e) {
       query.internalError(new Exception("Too many requests pending,"
@@ -307,7 +351,8 @@ final class GraphHandler implements HttpRpc {
    * @param start_time The start time on the query (32-bit unsigned int, secs).
    * @param end_time The end time on the query (32-bit unsigned int, seconds).
    * @param now The current time (32-bit unsigned int, seconds).
-   * @return A positive integer, in seconds. 一个以秒为单位的正整数
+   * @return A positive integer, in seconds.
+   *        一个以秒为单位的正整数
    */
   private static int computeMaxAge(final HttpQuery query,
                                    final long start_time, final long end_time,
@@ -336,7 +381,7 @@ final class GraphHandler implements HttpRpc {
 
   // Runs Gnuplot in a subprocess to generate the graph.
   // 运行Gnuplot在一个子进程，去生成图形
-  //可以看到这个内部类实现了Runable类【再次研究Runnable类】
+  //可以看到这个内部类实现了Runable类【再次研究Runnable类】 => 多线程
   private static final class RunGnuplot implements Runnable {
 
     private final HttpQuery query;
@@ -459,10 +504,12 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Checks whether or not it's possible to re-serve this query from disk.
-   * 检查是否需要在磁盘重新服务此查询
+   * 检查是否需要在磁盘重新服务（执行）此查询
    *
    * @param query The query to serve.
+   *              需要执行的查询
    * @param end_time The end time on the query (32-bit unsigned int, seconds).
+   *
    * @param max_age The maximum time (in seconds) we wanna allow clients to
    * cache the result in case of a cache hit.
    * @param basepath The base path used for the Gnuplot files.
@@ -909,6 +956,8 @@ final class GraphHandler implements HttpRpc {
 
   /**
    * Respond to a query that wants the output in ASCII.
+   * 响应一个需要ASCII输出的查询
+   *
    * <p>
    * When a query specifies the "ascii" query string parameter, we send the
    * data points back to the client in plain text instead of sending a PNG.
@@ -1066,6 +1115,7 @@ final class GraphHandler implements HttpRpc {
       } else if (!file.canRead()) {
           error = "unreadable";
       } else {
+          System.out.println("lawson-------------path is = "+ path);
           return path;
       }
       throw new RuntimeException("The " + WRAPPER + " found on the"

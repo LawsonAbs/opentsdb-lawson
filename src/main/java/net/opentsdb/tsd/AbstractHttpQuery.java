@@ -41,6 +41,7 @@ import net.opentsdb.stats.QueryStats;
 
 /**
  * Abstract base class for HTTP queries.
+ * 对于HTTP请求的抽象类
  * 
  * @since 2.2
  */
@@ -91,6 +92,7 @@ public abstract class AbstractHttpQuery {
   
   /**
    * Returns the underlying Netty {@link HttpRequest} of this query.
+   * 返回这个query的底层Netty HttpRequest
    */
   public HttpRequest request() {
     return request;
@@ -245,12 +247,18 @@ public abstract class AbstractHttpQuery {
 
   /**
    * Returns all the values of the given query string parameter.
+   * 返回给定查询字符参数的所有值
+   *
    * <p>
    * In case this parameter occurs multiple times in the URL, this method is
    * useful to get all the values.
+   * 如果这个参数在URL中多次出现，这个方法对于获取所有值将是非常有用的
+   *
    * @param paramname Name of the query string parameter to get.
+   *                  需要获取的查询参数
    * @return The values of the parameter or {@code null} if this parameter
    * wasn't passed in the URI.
+   *        参数值，如果这个参数没有被传入到URI中，那么将返回null.
    */
   public List<String> getQueryStringParams(final String paramname) {
     return getQueryString().get(paramname);

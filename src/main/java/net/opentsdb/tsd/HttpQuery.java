@@ -53,7 +53,7 @@ import com.stumbleupon.async.Deferred;
 
 /**
  * Binds together an HTTP request and the channel on which it was received.
- * 将一个HTTP请求和接收到的通道绑定在一起。
+ * 将一个HTTP请求和接收到的通道绑定在一起。[看来像是使用的nio]
  *
  * It makes it easier to provide a few utility methods to respond to the
  * requests.
