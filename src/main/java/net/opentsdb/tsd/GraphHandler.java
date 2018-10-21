@@ -1065,39 +1065,7 @@ final class GraphHandler implements HttpRpc {
    * Iterate through the class path and look for the Gnuplot helper script.
    * @return The path to the wrapper script.
    */
-//  private static String findGnuplotHelperScript() {
-//    /*我做了如下更改！
-//    1.因为这个URL无法找到，具体的原因我也不大清楚，于是我就直接使用了mygnuplot.bat所在的绝对路径
-//    final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
-//    if (url == null) {
-//      throw new RuntimeException("Couldn't find " + WRAPPER + " on the"
-//        + " CLASSPATH: " + System.getProperty("java.class.path"));
-//    }*/
-//    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
-//
-//    //因为上述的这个路径虽然可以通过程序，但是无法在浏览器中得到图形展示，我就尝试如下这个路径
-//    //事实证明：这个语句是错误的
-//    //final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb";
-//
-//    final String path = "E:\\intellij_Project\\opentsdb_dev\\src\\main\\java\\net\\opentsdb\\mygnuplot.bat";
-//    //  final String path = "G:\\testdb\\mygnuplot.bat";
-//    LOG.debug("Using Gnuplot wrapper at {}", path);
-//    final File file = new File(path);
-//    final String error;
-//    if (!file.exists()) {
-//      error = "non-existent";
-//    } else if (!file.canExecute()) {
-//      error = "non-executable";
-//    } else if (!file.canRead()) {
-//      error = "unreadable";
-//    } else {
-//      return path;
-//    }
-//    throw new RuntimeException("The " + WRAPPER + " found on the"
-//      + " CLASSPATH (" + path + ") is a " + error + " file...  WTF?"
-//      + "  CLASSPATH=" + System.getProperty("java.class.path"));
-//  }
-//  下面这个为原始的方法
+
   private static String findGnuplotHelperScript() {
       final URL url = GraphHandler.class.getClassLoader().getResource(WRAPPER);
       if (url == null) {

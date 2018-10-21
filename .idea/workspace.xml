@@ -5,18 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aff1a2d2-fadf-4ab6-b419-6856711803af" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$1ErrorCB.class" afterPath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$1ErrorCB.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$1GlobalCB.class" afterPath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$1GlobalCB.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$PlotThdFactory.class" afterPath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$PlotThdFactory.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$RunGnuplot.class" afterPath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler$RunGnuplot.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler.class" afterPath="$PROJECT_DIR$/target/classes/net/opentsdb/tsd/GraphHandler.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/AbstractHttpQuery.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/AbstractHttpQuery.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/GraphHandler.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/GraphHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/HttpQuery.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/HttpQuery.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/utils/Config.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/utils/Config.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/opentsdb/utils/DateTime.java" afterPath="$PROJECT_DIR$/src/main/java/net/opentsdb/utils/DateTime.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -37,8 +26,8 @@
       <file leaf-file-name="GraphHandler.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/GraphHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="349">
-              <caret line="391" column="8" lean-forward="false" selection-start-line="391" selection-start-column="8" selection-end-line="391" selection-end-column="8" />
+            <state relative-caret-position="389">
+              <caret line="1076" column="39" lean-forward="true" selection-start-line="1076" selection-start-column="39" selection-end-line="1076" selection-end-column="39" />
               <folding>
                 <element signature="e#16679#16695#0" expanded="true" />
               </folding>
@@ -335,15 +324,6 @@
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="opentsdb" type="462c0819:PsiDirectoryNode" />
               <item name="graph" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="opentsdb_dev" type="b2602c69:ProjectViewProjectNode" />
-              <item name="opentsdb_dev" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="opentsdb" type="462c0819:PsiDirectoryNode" />
-              <item name="tools" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="opentsdb_dev" type="b2602c69:ProjectViewProjectNode" />
@@ -675,12 +655,12 @@
       <workItem from="1539160160863" duration="37050000" />
       <workItem from="1539395822677" duration="19272000" />
       <workItem from="1539601693624" duration="2079000" />
-      <workItem from="1539845577644" duration="17750000" />
+      <workItem from="1539845577644" duration="18141000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="230012000" />
+    <option name="totallyTimeSpent" value="230403000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="58" y="-8" width="1870" height="1096" extended-state="6" />
@@ -694,7 +674,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16141514" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3211679" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08342023" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1246,8 +1226,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/opentsdb/tsd/GraphHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="391" column="8" lean-forward="false" selection-start-line="391" selection-start-column="8" selection-end-line="391" selection-end-column="8" />
+        <state relative-caret-position="389">
+          <caret line="1076" column="39" lean-forward="true" selection-start-line="1076" selection-start-column="39" selection-end-line="1076" selection-end-column="39" />
           <folding>
             <element signature="e#16679#16695#0" expanded="true" />
           </folding>
