@@ -459,8 +459,9 @@ final class GraphHandler implements HttpRpc {
       graphlatency.add(query.processingTimeMillis());
       graphs_generated.incrementAndGet();
     }
-
   }
+
+
 
   /** Shuts down the thread pool used to run Gnuplot.  */
   public void shutdown() {
