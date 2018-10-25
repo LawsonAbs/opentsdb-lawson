@@ -2,7 +2,12 @@ package lawson;
 
 public class calculateLength {
     public static void main(String[] args) {
-        test();
+        test2();
+    }
+    public static void test2(){
+        String s = "";
+        System.out.println(s.indexOf("a"));//-1
+        System.out.println(s.indexOf('a')!=-1);//-1
     }
     public static void test(){
         int a = 10;

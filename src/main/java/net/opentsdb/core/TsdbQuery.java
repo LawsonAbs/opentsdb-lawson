@@ -50,12 +50,17 @@ import net.opentsdb.utils.DateTime;
 
 /**
  * Non-synchronized implementation of {@link Query}.
+ * Query的非同步实现
+ *
  */
 final class TsdbQuery implements Query {
 
   private static final Logger LOG = LoggerFactory.getLogger(TsdbQuery.class);
 
-  /** Used whenever there are no results. */
+  /** Used whenever there are no results.
+   *  当没有结果时使用
+   *  whenever：每当
+   * */
   private static final DataPoints[] NO_RESULT = new DataPoints[0];
 
   /**

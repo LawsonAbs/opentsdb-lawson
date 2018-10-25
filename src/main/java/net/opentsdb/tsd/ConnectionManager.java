@@ -33,11 +33,15 @@ import net.opentsdb.stats.StatsCollector;
 
 /**
  * Keeps track of all existing connections.
+ * 跟踪所有现有的连接
+ *
+ * ConnectionManager : 连接管理
  */
 final class ConnectionManager extends SimpleChannelHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConnectionManager.class);
 
+  //AtomicLong :A long value that may be updated atomically.
   private static final AtomicLong connections_established = new AtomicLong();
   private static final AtomicLong connections_rejected = new AtomicLong();
   private static final AtomicLong exceptions_unknown = new AtomicLong();
@@ -46,12 +50,17 @@ final class ConnectionManager extends SimpleChannelHandler {
   private static final AtomicLong exceptions_timeout = new AtomicLong();
   
   /** Max connections can be serviced by tsd, if over limit, tsd will refuse 
-   * new connections. */
+   * new connections.
+   * tsd所支持的最大连接数，如果超出限制，tsd将会拒绝新的连接
+   * */
   private final int connections_limit;
   
   /** A counter used for determining how many channels are open. Something odd
    * happens with the DefaultChannelGroup in that .size() doesn't return the
-   * actual number of open connections. TODO - find out why. */
+   * actual number of open connections.
+   *
+   * TODO - find out why.
+   * */
   private final AtomicInteger open_connections = new AtomicInteger();
 
   private static final DefaultChannelGroup channels =

@@ -535,22 +535,40 @@ public final class Tags {
   
   /**
    * Ensures that a given string is a valid metric name or tag name/value.
+   * 确保给出的字符串是一个有效的metric 或者是一个tag name/value
+   *
+   *
    * @param what A human readable description of what's being validated.
+   *             以人类可读方式的去描述什么正在被验证。例如：如果现在正在检查metric部分，那么这里的what="metric name"；
+   *             如果正在检验tag name，那么这里的what = "tag name"
    * @param s The string to validate.
-   * @throws IllegalArgumentException if the string isn't valid.
+   *          需要验证的字符串
+   * @throws IllegalArgumentException if the string isn't valid.如果字符串是无效的，则抛出错误
    */
   public static void validateString(final String what, final String s) {
-    if (s == null) {
+    if (s == null) {//先判断s是否为null
       throw new IllegalArgumentException("Invalid " + what + ": null");
-    } else if ("".equals(s)) {
+    } else if ("".equals(s)) {//如果s=""，抛出空字符串异常
       throw new IllegalArgumentException("Invalid " + what + ": empty string");
     }
-    final int n = s.length();
+    final int n = s.length();//获取字符串s的长度
     for (int i = 0; i < n; i++) {
       final char c = s.charAt(i);
-      if (!(('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') 
-          || ('0' <= c && c <= '9') || c == '-' || c == '_' || c == '.' 
-          || c == '/' || Character.isLetter(c) || isAllowSpecialChars(c))) {
+
+      //如下这个逻辑用于判断metric/tag kv字段的字符是否符合要求
+      //Character.isLetter(c): Determines if the specified character is a letter.
+      //只要求下面的有一项为true即可
+      if(!(
+              ('a' <= c && c <= 'z')
+              || ('A' <= c && c <= 'Z')
+              || ('0' <= c && c <= '9')
+              || c == '-'
+              || c == '_'
+              || c == '.'
+              || c == '/'
+              || Character.isLetter(c)
+              || isAllowSpecialChars(c) //一般情况下，这会返回false
+      )) {
         throw new IllegalArgumentException("Invalid " + what
             + " (\"" + s + "\"): illegal character: " + c);
       }
@@ -821,6 +839,7 @@ public final class Tags {
 
   /**
    * Returns true if the character can be used a tag name or a tag value.
+   * 如果字符能够被用作tag_name 或者tag_value，则返回true。
    * @param character
    * @return
    */

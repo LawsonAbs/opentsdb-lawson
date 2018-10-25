@@ -84,6 +84,9 @@ public final class TSDB {
   /** Charset used to convert Strings to byte arrays and back. */
   private static final Charset CHARSET = Charset.forName("ISO-8859-1");
   private static final String METRICS_QUAL = "metrics";
+
+  //默认的metrics的宽度为3 bytes
+  //当然可以根据配置文件的值进行修改
   private static short METRICS_WIDTH = 3;
   private static final String TAG_NAME_QUAL = "tagk";
   private static short TAG_NAME_WIDTH = 3;
@@ -104,7 +107,9 @@ public final class TSDB {
   /** Name of the table where meta data is stored. */
   final byte[] meta_table;
 
-  /** Unique IDs for the metric names. */
+  /** Unique IDs for the metric names.
+   * 针对metric name的唯一Ids
+   * */
   final UniqueId metrics;
   /** Unique IDs for the tag names. */
   final UniqueId tag_names;
@@ -209,6 +214,7 @@ public final class TSDB {
     treetable = config.getString("tsd.storage.hbase.tree_table").getBytes(CHARSET);
     meta_table = config.getString("tsd.storage.hbase.meta_table").getBytes(CHARSET);
 
+    //如下就是根据配置文件生成一个metrics(UniqueId类实例)
     if (config.getBoolean("tsd.core.uid.random_metrics")) {
       metrics = new UniqueId(this, uidtable, METRICS_QUAL, METRICS_WIDTH, true);
     } else {
@@ -961,12 +967,14 @@ public final class TSDB {
                             tags, flags);
   }
 
+  //在检验完metric,tag k-v是否符合标准之后，进入到addPointInternal()方法
   private Deferred<Object> addPointInternal(final String metric,
                                             final long timestamp,
                                             final byte[] value,
                                             final Map<String, String> tags,
                                             final short flags) {
     // we only accept positive unix epoch timestamps in seconds or milliseconds
+    //对时间戳进行判断
     if (timestamp < 0 || ((timestamp & Const.SECOND_MASK) != 0 && 
         timestamp > 9999999999999L)) {
       throw new IllegalArgumentException((timestamp < 0 ? "negative " : "bad")
@@ -974,6 +982,7 @@ public final class TSDB {
           + " when trying to add value=" + Arrays.toString(value) + '/' + flags
           + " to metric=" + metric + ", tags=" + tags);
     }
+
     IncomingDataPoints.checkMetricAndTags(metric, tags);
     final byte[] row = IncomingDataPoints.rowKeyTemplate(this, metric, tags);
     final long base_time;

@@ -32,6 +32,7 @@ import net.opentsdb.stats.Histogram;
 
 /**
  * Receives new data points and stores them in HBase.
+ * 接收新数据并且将其存储在Hbase中
  */
 final class IncomingDataPoints implements WritableDataPoints {
 
@@ -97,21 +98,27 @@ final class IncomingDataPoints implements WritableDataPoints {
 
   /**
    * Validates the given metric and tags.
-   * 
+   * 确认给出的metric和tags
    * @throws IllegalArgumentException
    *           if any of the arguments aren't valid.
+   *           如果有任何的参数是无效的，那么就抛出IllegalArgumentException
+   */
+  /*
+    01.metric 是一个String，tags是一个Map
    */
   static void checkMetricAndTags(final String metric,
       final Map<String, String> tags) {
-    if (tags.size() <= 0) {
+    if (tags.size() <= 0) {//首先判断tags长度是否达标
       throw new IllegalArgumentException("Need at least one tag (metric="
           + metric + ", tags=" + tags + ')');
-    } else if (tags.size() > Const.MAX_NUM_TAGS()) {
+    } else if (tags.size() > Const.MAX_NUM_TAGS()) {//判断tag的长度是否符合要求
       throw new IllegalArgumentException("Too many tags: " + tags.size()
           + " maximum allowed: " + Const.MAX_NUM_TAGS() + ", tags: " + tags);
     }
 
+    //轮流判断metric，tag k-v【因为tags是一个map，所以里面的每个tags都需要遍历检验】
     Tags.validateString("metric name", metric);
+    //entrySet()：a set view of the mappings contained in this map
     for (final Map.Entry<String, String> tag : tags.entrySet()) {
       Tags.validateString("tag name", tag.getKey());
       Tags.validateString("tag value", tag.getValue());
@@ -119,8 +126,11 @@ final class IncomingDataPoints implements WritableDataPoints {
   }
 
   /**
-   * Returns a partially initialized row key for this metric and these tags. The
-   * only thing left to fill in is the base timestamp.
+   * Returns a partially initialized row key for this metric and these tags.
+   * 为这个metric和这些tags返回一个典型的初始化row key
+   *
+   * The only thing left to fill in is the base timestamp.
+   * 仅仅需要填写的是基础时间戳
    */
   static byte[] rowKeyTemplate(final TSDB tsdb, final String metric,
       final Map<String, String> tags) {

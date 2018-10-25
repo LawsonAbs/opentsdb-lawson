@@ -20,8 +20,10 @@ import org.hbase.async.HBaseException;
 
 /**
  * Represents a mutable sequence of continuous data points.
+ * 表示连续数据点的可变序列
  * <p>
  * Implementations of this interface aren't expected to be synchronized.
+ * 这个接口的实现类不能被同步处理【为什么？】
  */
 public interface WritableDataPoints extends DataPoints {
 

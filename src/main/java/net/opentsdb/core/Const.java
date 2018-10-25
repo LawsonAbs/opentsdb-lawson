@@ -15,13 +15,19 @@ package net.opentsdb.core;
 import java.nio.charset.Charset;
 import java.util.TimeZone;
 
-/** Constants used in various places.  */
+/** Constants used in various places.
+ *  在不同的地方（类中）使用的常数
+ * */
 public final class Const {
 
   /** Number of bytes on which a timestamp is encoded.  */
   public static final short TIMESTAMP_BYTES = 4;
 
-  /** Maximum number of tags allowed per data point.  */
+  /** Maximum number of tags allowed per data point.
+   *  每个数据点所允许的最大tags数。（默认值为8）
+   *  01.静态变量
+   *  02.有一个专门返回此变量的方法 —— MAX_NUM_TAGS()
+   * */
   private static short MAX_NUM_TAGS = 8;
   public static short MAX_NUM_TAGS() {
     return MAX_NUM_TAGS;
@@ -82,7 +88,10 @@ public final class Const {
   /** Mask to select all the FLAG_BITS.  */
   public static final short FLAGS_MASK = FLAG_FLOAT | LENGTH_MASK;
   
-  /** Mask to verify a timestamp on 4 bytes in seconds */
+  /** Mask to verify a timestamp on 4 bytes in seconds
+   *  用于验证一个秒级别时间戳，长度为4 bytes的掩码
+   *  这个数在底层是用补码存储，转换一下得到正确的数值为 -2^32
+   * */
   public static final long SECOND_MASK = 0xFFFFFFFF00000000L;
   
   /** Mask to verify a timestamp on 6 bytes in milliseconds */

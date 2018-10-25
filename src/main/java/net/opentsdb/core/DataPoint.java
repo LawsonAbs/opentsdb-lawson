@@ -14,6 +14,7 @@ package net.opentsdb.core;
 
 /**
  * Represents a single data point.
+ * 代表单个数据点
  * <p>
  * Implementations of this interface aren't expected to be synchronized.
  */

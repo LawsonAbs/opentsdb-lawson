@@ -42,9 +42,12 @@ import net.opentsdb.meta.UIDMeta;
 
 /**
  * Represents a table of Unique IDs, manages the lookup and creation of IDs.
- * <p>
+ * 代表唯一IDs的一张表，管理IDs的查询和创建
+ *
+ *
  * Don't attempt to use {@code equals()} or {@code hashCode()} on
  * this class.
+ * 不要在这个类上使用equals()和hashcode()这两个方法
  * @see UniqueIdInterface
  */
 @SuppressWarnings("deprecation")  // Dunno why even with this, compiler warns.
