@@ -101,24 +101,30 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
 
   /**
    * Handles HTTP RPC put requests
+   * 处理HTTP RPC put请求
+   *
    * @param tsdb The TSDB to which we belong
    * @param query The HTTP query from the user
+   *              来自用户的HTTP 查询请求
    * @throws IOException if there is an error parsing the query or formatting 
-   * the output
+   * the output 如果在解析查询或者格式化输出的时候有一个错误，则会抛出一个异常
+   *
    * @throws BadRequestException if the user supplied bad data
+   *         如果用户提供了错误的数据
    * @since 2.0
    */
   public void execute(final TSDB tsdb, final HttpQuery query) 
     throws IOException {
     requests.incrementAndGet();
     
-    // only accept POST
+    // only accept POST【仅仅接收post请求】
+    //有什么不对的地方么？ 为什么只接受post请求呢？
     if (query.method() != HttpMethod.POST) {
       throw new BadRequestException(HttpResponseStatus.METHOD_NOT_ALLOWED, 
           "Method not allowed", "The HTTP method [" + query.method().getName() +
           "] is not permitted for this endpoint");
     }
-    
+    //
     final List<IncomingDataPoint> dps = query.serializer().parsePutV1();
     if (dps.size() < 1) {
       throw new BadRequestException("No datapoints found in content");

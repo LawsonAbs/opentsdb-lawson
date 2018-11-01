@@ -20,7 +20,9 @@ import java.util.TimeZone;
  * */
 public final class Const {
 
-  /** Number of bytes on which a timestamp is encoded.  */
+  /** Number of bytes on which a timestamp is encoded.
+   * 对时间戳进行编码的字节数
+   * */
   public static final short TIMESTAMP_BYTES = 4;
 
   /** Maximum number of tags allowed per data point.
@@ -155,12 +157,21 @@ public final class Const {
   
   /**
    * Width of the salt in bytes.
+   * 加盐处理的字节长度
+   *
    * Its width should be proportional to SALT_BUCKETS data type.
-   * When set to 0, salting is disabled.
-   * if SALT_WIDTH = 1, the SALT_BUCKETS should be byte
-   * if SALT_WIDTH = 2, the SALT_BUCKETS can be byte or short
+   * 它的宽度应该与salt_bucket数据类型成正比。
+   *
+   * When set to 0, salting is disabled.【当被设置为0时，salting功能被关闭】
+   * if SALT_WIDTH = 1, the SALT_BUCKETS should be byte【当salt_width=1，salt_buckets 将会是byte】
+   * if SALT_WIDTH = 2, the SALT_BUCKETS can be byte or short【当salt_width=2，salt_buckets 可能会是byte，或者是short型】
+   *
+   *
    * WARNING: Do NOT change this after you start writing data or you will not
    * be able to query for anything.
+   * 警告：当你已经写数据或者你不能查询到任何数据时，请不要改变
+   *
+   * 01.但是为什么这里将SQL_WIDTH设置成一个static的变量，且值为0呢？
    */
   private static int SALT_WIDTH = 0;
   public static int SALT_WIDTH() {

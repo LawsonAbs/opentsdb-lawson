@@ -77,27 +77,37 @@ public final class JSON {
   /**
    * Jackson de/serializer initialized, configured and shared
    *
-   * 1.ObjectMapper（提供java核心对象到相应的JSON结构的转换）
+   * 01.ObjectMapper：【这个mapper提供 java核心对象到相应的JSON结构的转换功能】
    * This mapper (or, data binder, or codec) provides functionality for
    * converting between Java objects (instances of JDK provided core classes,
    * beans), and matching JSON constructs.
+   *
    */
   private static final ObjectMapper jsonMapper = new ObjectMapper();
+
   static {
     // allows parsing NAN and such without throwing an exception. This is
     // important
     // for incoming data points with multiple points per put so that we can
     // toss only the bad ones but keep the good
+    //程序健壮性
     jsonMapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
   }
 
   /**
    * Deserializes a JSON formatted string to a specific class type
+   * 将一个Json字符串 格式化反序列化成 一个指定的类类型
+   *
    * <b>Note:</b> If you get mapping exceptions you may need to provide a 
    * TypeReference
+   * 如果你得到一个mapping（映射）异常，你可能需要提供一个TypeReference
+   *
    * @param json The string to deserialize
+   *             用于反序列化的字符串
    * @param pojo The class type of the object used for deserialization
+   *             用于反序列化的对象的类类型
    * @return An object of the {@code pojo} type
+   *          返回pojo类型的对象
    * @throws IllegalArgumentException if the data or class was null or parsing 
    * failed
    * @throws JSONException if the data could not be parsed
@@ -108,7 +118,8 @@ public final class JSON {
       throw new IllegalArgumentException("Incoming data was null or empty");
     if (pojo == null)
       throw new IllegalArgumentException("Missing class type");
-    
+
+    //readValue()方法的实现？
     try {
       return jsonMapper.readValue(json, pojo);
     } catch (JsonParseException e) {

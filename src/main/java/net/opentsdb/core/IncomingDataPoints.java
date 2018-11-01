@@ -105,6 +105,9 @@ final class IncomingDataPoints implements WritableDataPoints {
    */
   /*
     01.metric 是一个String，tags是一个Map
+
+    why?
+    01.这个metric,tags是怎么来的？
    */
   static void checkMetricAndTags(final String metric,
       final Map<String, String> tags) {
@@ -139,19 +142,25 @@ final class IncomingDataPoints implements WritableDataPoints {
     final short tag_value_width = tsdb.tag_values.width();
     final short num_tags = (short) tags.size();
 
+    //row_size 代表的就是row_key长度
+    //可以看到这里有SALT_WIDTH()
+    //计算方式是：salt_width + metric_width + timestamp_bytes + tag_name_width * num_tags + tage_value_width * num_tags
     int row_size = (Const.SALT_WIDTH() + metric_width + Const.TIMESTAMP_BYTES 
         + tag_name_width * num_tags + tag_value_width * num_tags);
+
+    //new 一个字节数组，其长度为row_size
     final byte[] row = new byte[row_size];
 
+    //为什么这里需要使用pos变量？
+    //为什么pos = 13？【应该是一个异常情况，正常情况应该是0】
     short pos = (short) Const.SALT_WIDTH();
 
     copyInRowKey(row, pos,
-        (tsdb.config.auto_metric() ? tsdb.metrics.getOrCreateId(metric)
-            : tsdb.metrics.getId(metric)));
+        (tsdb.config.auto_metric() ? tsdb.metrics.getOrCreateId(metric): tsdb.metrics.getId(metric)));
     pos += metric_width;
 
     pos += Const.TIMESTAMP_BYTES;
-
+    //将tags中的所有值全部复制到row中
     for (final byte[] tag : Tags.resolveOrCreateAll(tsdb, tags)) {
       copyInRowKey(row, pos, tag);
       pos += tag.length;
@@ -230,16 +239,27 @@ final class IncomingDataPoints implements WritableDataPoints {
 
   /**
    * Copies the specified byte array at the specified offset in the row key.
-   * 
+   * 复制指定的字节数组在指定的偏移处 在行键中
+   *
    * @param row
    *          The row key into which to copy the bytes.
+   *          row是目标数组
    * @param offset
    *          The offset in the row key to start writing at.
+   *          （复制数据到）目标数组的起始位置
    * @param bytes
    *          The bytes to copy.
+   *          要复制的数组（源数组）
+   *
    */
-  private static void copyInRowKey(final byte[] row, final short offset,
-      final byte[] bytes) {
+  private static void copyInRowKey(final byte[] row,
+                                   final short offset,
+                                   final byte[] bytes) {
+    //bytes 是源数组；
+      // 从0开始复制；
+      // 目标数组是row；
+      // offset是复制的数据写到row数组中的起始位置；
+    // length表示需要复制的长度
     System.arraycopy(bytes, 0, row, offset, bytes.length);
   }
 

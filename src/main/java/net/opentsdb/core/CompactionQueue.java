@@ -38,6 +38,8 @@ import net.opentsdb.utils.JSON;
 
 /**
  * "Queue" of rows to compact.
+ * 存储被压缩行的队列
+ *
  * <p>
  * Whenever we write a data point to HBase, the row key we write to is added
  * to this queue, which is effectively a sorted set.  There is a separate

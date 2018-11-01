@@ -194,10 +194,16 @@ public final class UniqueId implements UniqueIdInterface {
   /**
    * Constructor.
    * @param tsdb The TSDB this UID object belongs to
+   *             这个UID对象所属于的TSDB对象
    * @param table The name of the HBase table to use.
+   *              需要使用到的HBase table
    * @param kind The kind of Unique ID this instance will deal with.
+   *             这个实例将会处理的Unique ID类型
    * @param width The number of bytes on which Unique IDs should be encoded.
-   * @param Whether or not to randomize new UIDs
+   *              Unique IDs将会被编码的字节数
+   *
+   * @param randomize_id Whether or not to randomize new UIDs
+   *                      是否需要随机化新的UIDs
    * @throws IllegalArgumentException if width is negative or too small/large
    * or if kind is an empty string.
    * @since 2.3
@@ -362,6 +368,7 @@ public final class UniqueId implements UniqueIdInterface {
     }
   }
 
+  //call -> getIdAsync(name)
   public byte[] getId(final String name) throws NoSuchUniqueName, HBaseException {
     try {
       return getIdAsync(name).joinUninterruptibly();

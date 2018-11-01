@@ -12,22 +12,9 @@
 // see <http://www.gnu.org/licenses/>.
 package net.opentsdb.tsd;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
-
 import com.stumbleupon.async.Deferred;
-
 import net.opentsdb.core.DataPoints;
 import net.opentsdb.core.IncomingDataPoint;
 import net.opentsdb.core.TSDB;
@@ -42,6 +29,12 @@ import net.opentsdb.tree.TreeRule;
 import net.opentsdb.tsd.AnnotationRpc.AnnotationBulkDelete;
 import net.opentsdb.tsd.QueryRpc.LastPointQuery;
 import net.opentsdb.utils.Config;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Abstract base class for Serializers; plugins that handle converting requests
@@ -95,7 +88,9 @@ public abstract class HttpSerializer {
   protected String response_content_type = "application/json; charset=UTF-8";
   
   /** The query used for accessing the DefaultHttpResponse object and other 
-   * information */
+   * information
+   * 这个query用于访问DefaultHttpResponse对象以及其它的信息
+   * */
   protected final HttpQuery query;
   
   /**
@@ -109,6 +104,10 @@ public abstract class HttpSerializer {
    * Constructor that serializers must implement. This is how each plugin will 
    * get the request content and have the option to set headers or a custom
    * status code in the response.
+   * 序列化其必须实现的构造器。
+   * 这是每一个插件获取请求内容 并且可以在响应中设置标题或自定义状态码。
+   *
+   *
    * <p>
    * <b>Note:</b> A new serializer is instantiated for every HTTP connection, so
    * don't do any heavy object creation here. Instead, use the 
@@ -164,8 +163,14 @@ public abstract class HttpSerializer {
   
   /**
    * Parses one or more data points for storage
+   * 解析一或多个数据点用于存储
    * @return an array of data points to process for storage
+   *            用于存储的一组数据点
+   *
    * @throws BadRequestException if the plugin has not implemented this method
+   *
+   * 01.这个只是抽象类中的方法，真正的实现在HttpJsoonSerializer类中的parsePutV1()方法
+   *
    */
   public List<IncomingDataPoint> parsePutV1() {
     throw new BadRequestException(HttpResponseStatus.NOT_IMPLEMENTED, 

@@ -12,19 +12,14 @@
 // see <http://www.gnu.org/licenses/>.
 package net.opentsdb.utils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * OpenTSDB Configuration Class
@@ -70,10 +65,14 @@ public class Config {
   /** tsd.core.auto_create_tagv */
   private boolean auto_tagv = true;
   
-  /** tsd.storage.enable_compaction */
+  /** tsd.storage.enable_compaction
+   * 默认开启data point的压缩功能
+   * */
   private boolean enable_compactions = true;
   
-  /** tsd.storage.enable_appends */
+  /** tsd.storage.enable_appends
+   * 为什么默认是false?
+   * */
   private boolean enable_appends = false;
   
   /** tsd.storage.repair_appends */
@@ -113,11 +112,15 @@ public class Config {
   protected final HashMap<String, String> properties = 
     new HashMap<String, String>();
 
-  /** Holds default values for the config */
+  /** Holds default values for the config
+   * 为配置添加默认值
+   * */
   protected static final HashMap<String, String> default_map = 
     new HashMap<String, String>();
   
-  /** Tracks the location of the file that was actually loaded */
+  /** Tracks the location of the file that was actually loaded
+   *  跟踪实际加载的文件路径
+   * */
   protected String config_location;
 
   /**
@@ -167,12 +170,16 @@ public class Config {
     setDefaults();
   }
 
-  /** @return The file that generated this config. May be null */
+  /** @return The file that generated this config. May be null
+   *    产生这个config的文件。可以为null
+   * */
   public String configLocation() {
     return config_location;
   }
   
-  /** @return the auto_metric value */
+  /** @return the auto_metric value
+   * 返回auto_metric 值
+   * */
   public boolean auto_metric() {
     return auto_metric;
   }
@@ -199,7 +206,9 @@ public class Config {
     return enable_compactions;
   }
   
-  /** @return whether or not to write data in the append format */
+  /** @return whether or not to write data in the append format
+   * 是否允许以追加的方式写入数据
+   * */
   public boolean enable_appends() {
     return enable_appends;
   }

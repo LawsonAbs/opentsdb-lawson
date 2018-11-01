@@ -71,6 +71,8 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Keep track of the latency of HTTP requests.
+   * 跟踪Http请求的延迟
+   *
    */
   private static final Histogram httplatency =
     new Histogram(16000, (short) 2, 100);
@@ -89,21 +91,30 @@ final class HttpQuery extends AbstractHttpQuery {
   /** API version parsed from the incoming request */
   private int api_version = 0;
 
-  /** The serializer to use for parsing input and responding */
+  /** The serializer to use for parsing input and responding
+   *  用于解析输入和响应的序列化器
+   * */
   private HttpSerializer serializer = null;
 
-  /** Whether or not to show stack traces in the output */
+  /** Whether or not to show stack traces in the output
+   * 是否应该在输出中展示堆栈跟踪
+   * */
   private final boolean show_stack_trace;
 
-  /**
+   /**
    * Constructor.
    * @param request The request in this HTTP query.
+   *                HTTP查询中的请求
    * @param chan The channel on which the request was received.
+   *                接收请求的通道
    */
   public HttpQuery(final TSDB tsdb, final HttpRequest request, final Channel chan) {
-    super(tsdb, request, chan);
+    super(tsdb, request, chan);//调用父类的构造器
     this.show_stack_trace =
       tsdb.getConfig().getBoolean("tsd.http.show_stack_trace");
+
+    //新建一个序列化器（用于解析Http Json）
+    //传递的参数是这个query
     this.serializer = new HttpJsonSerializer(this);
   }
 
@@ -592,12 +603,17 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Sends the ChannelBuffer with the given status
+   * 发送具有给定状态的通道缓冲区
+   *
    * @param status HttpResponseStatus to reply with
+   *               响应的HttpResponseStatus
    * @param buf The buffer to send
+   *            需要发送的buffer
    * @since 2.0
    */
-  public void sendReply(final HttpResponseStatus status,
-      final ChannelBuffer buf) {
+  public void sendReply(
+          final HttpResponseStatus status,
+          final ChannelBuffer buf) {
     sendBuffer(status, buf);
   }
 
@@ -622,15 +638,26 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Send a file (with zero-copy) to the client.
-   * This method doesn't provide any security guarantee.  The caller is
-   * responsible for the argument they pass in.
+   * 发送一个文件（使用零拷贝）的方法传递给客户端
+   *
+   * This method doesn't provide any security guarantee.
+   * The caller is responsible for the argument they pass in.
+   * 这个方法不会提供任何的安全保证。
+   * 调用者对他们传递的参数应该负责
+   *
    * @param status The status of the request (e.g. 200 OK or 404 Not Found).
+   *               请求状态，（200表示正常，404表示not found）
    * @param path The path to the file to send to the client.
+   *             发送给客户端文件的路径
+   *
    * @param max_age The expiration time of this entity, in seconds.  This is
    * not a timestamp, it's how old the resource is allowed to be in the client
    * cache.  See RFC 2616 section 14.9 for more information.  Use 0 to disable
    * caching.
+   *                表示这个实体的最长生命，秒为单位。这不是一个时间戳，它表示资源在客户端
+   *                缓存中允许的时间
    */
+  //我擦！这里的代码如果不敲出来，都不知道是一个
   @SuppressWarnings("resource") // Clears warning about RandomAccessFile not
       // being closed. It is closed in operationComplete().
   public void sendFile(final HttpResponseStatus status,
@@ -640,17 +667,21 @@ final class HttpQuery extends AbstractHttpQuery {
       throw new IllegalArgumentException("Negative max_age=" + max_age
                                          + " for path=" + path);
     }
-    if (!channel().isConnected()) {
+    if (!channel().isConnected()) {//如果没有建立channel，则直接返回
       done();
       return;
     }
+    //RandomAccessFile: 该类的实例支持对随机访问文件进行读写操作
     RandomAccessFile file;
     try {
       file = new RandomAccessFile(path, "r");
     } catch (FileNotFoundException e) {
       logWarn("File not found: " + e.getMessage());
+
+
       if (getQueryString() != null && !getQueryString().isEmpty()) {
         getQueryString().remove("png");  // Avoid potential recursion.
+        //作者这里说想避免潜在的递归是什么意思？
       }
       this.sendReply(HttpResponseStatus.NOT_FOUND, serializer.formatNotFoundV1());
       return;
@@ -688,24 +719,31 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Method to call after writing the HTTP response to the wire.
+   * 把HTTP响应写到wire后的调用的方法
+   *
    */
   @Override
   public void done() {
     final int processing_time = processingTimeMillis();
     httplatency.add(processing_time);
     logInfo("HTTP " + request().getUri() + " done in " + processing_time + "ms");
+
+    //Starts running the callback chain.
     deferred.callback(null);
   }
 
   /**
    * Sends an HTTP reply to the client.
+   * 发送一个HTTP响应到客户端
+   *
    * @param status The status of the request (e.g. 200 OK or 404 Not Found).
+   *               请求的状态
    * @param buf The content of the reply to send.
+   *            发送的回复内容
    */
   private void sendBuffer(final HttpResponseStatus status,
                           final ChannelBuffer buf) {
-    final String contentType = (api_version < 1 ? guessMimeType(buf) :
-      serializer.responseContentType());
+    final String contentType = (api_version < 1 ? guessMimeType(buf) :serializer.responseContentType());
     sendBuffer(status, buf, contentType);
   }
 

@@ -51,23 +51,37 @@ public abstract class AbstractHttpQuery {
   /** When the query was started (useful for timing). */
   private final long start_time = System.nanoTime();
 
-  /** The request in this HTTP query. */
+  /** The request in this HTTP query.
+   *  在这个HTTP查询中的请求
+   * */
   private final HttpRequest request;
 
   /** The channel on which the request was received. */
   private final Channel chan;
 
-  /** Shortcut to the request method */
+  /** Shortcut to the request method
+   * 请求方法的缩写
+   * */
   private final HttpMethod method;
 
-  /** Parsed query string (lazily built on first access). */
+  /** Parsed query string (lazily built on first access).
+   *  解析查询字符串（延迟加载直到第一次访问）
+   *
+   *  01.是一个Map
+   * */
   private Map<String, List<String>> querystring;
   
   /** Deferred result of this query, to allow asynchronous processing.
    * (Optional.) */
   protected final Deferred<Object> deferred = new Deferred<Object>();
   
-  /** The response object we'll fill with data */
+  /** The response object we'll fill with data
+   *  我们将用数据填充的响应对象
+   *
+   *  1.DefaultHttpResponse -> create a new instance
+   *  01.version :the HTTP version of this response
+   *  02.status :the status of this response
+   * */
   private final DefaultHttpResponse response =
     new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
 
@@ -79,15 +93,16 @@ public abstract class AbstractHttpQuery {
   
   /**
    * Set up required internal state.  For subclasses.
-   * 
+   * 建立所需的内部状态。（为了子类）
    * @param request the incoming HTTP request
+   *                即将到来的HTTP 请求
    * @param chan the {@link Channel} the request was received on
    */
   protected AbstractHttpQuery(final TSDB tsdb, final HttpRequest request, final Channel chan) {
     this.tsdb = tsdb;
     this.request = request;
     this.chan = chan;
-    this.method = request.getMethod();
+    this.method = request.getMethod();//获取（获取请求的方式——是post还是get）
   }
   
   /**
@@ -98,7 +113,9 @@ public abstract class AbstractHttpQuery {
     return request;
   }
 
-  /** Returns the HTTP method/verb for the request */
+  /** Returns the HTTP method/verb for the request
+   *  返回这个请求的HTTP方法/动作
+   * */
   public HttpMethod method() {
     return this.method;
   }
@@ -110,6 +127,7 @@ public abstract class AbstractHttpQuery {
 
   /**
    * Returns the underlying Netty {@link Channel} of this query.
+   * 返回这个查询的底层Netty Channel
    */
   public Channel channel() {
     return chan;
@@ -179,7 +197,9 @@ public abstract class AbstractHttpQuery {
     return start_time;
   }
 
-  /** Returns how many ms have elapsed since this query was created. */
+  /** Returns how many ms have elapsed since this query was created.
+   * 返回自从query创建之后时间过去了多久
+   * */
   public int processingTimeMillis() {
     return (int) ((System.nanoTime() - start_time) / 1000000);
   }
@@ -187,10 +207,18 @@ public abstract class AbstractHttpQuery {
   /**
    * Returns the query string parameters passed in the URI.
    * 返回传递到URI中的查询字符串参数
+   *
+   * 01.注意返回的参数对象是：Map类实例
+   * 02.
    */
   public Map<String, List<String>> getQueryString() {
     if (querystring == null) {
       try {
+        //Creates a new decoder that decodes the specified URI. The decoder will assume that the query string is encoded in UTF-8.
+        //创建一个新的decoder去解码指定的URI。这个解码器将会默认这个query字符串使用utf-8编码
+        //getUri() :Returns the URI (or path) of this request. 返回这个请求对象的URI(或者path)
+        //getParameters():Returns the decoded key-value parameter pairs of the URI.返回从URI中解码出的key-value参数对
+        //new 一个QueryStringDecoder，用于解析query中的参数
         querystring = new QueryStringDecoder(request.getUri()).getParameters();
       } catch (IllegalArgumentException e) {
         throw new BadRequestException("Bad query string: " + e.getMessage());
@@ -334,7 +362,9 @@ public abstract class AbstractHttpQuery {
     return Charset.forName("UTF-8");
   }
   
-  /** @return True if the request has content, false if not. */
+  /** @return True if the request has content, false if not.
+   *            如果请求包涵内容，则返回true，否则返回false
+   * */
   public boolean hasContent() {
     return this.request.getContent() != null &&
       this.request.getContent().readable();
@@ -342,6 +372,7 @@ public abstract class AbstractHttpQuery {
 
   /**
    * Decodes the request content to a string using the appropriate character set
+   * 使用合适的字符集，将请求内容解析成一个字符串
    * @return Decoded content or an empty string if the request did not include
    * content
    * @throws UnsupportedCharsetException if the parsed character set is invalid
@@ -420,6 +451,7 @@ public abstract class AbstractHttpQuery {
 
   /**
    * Sends an HTTP reply to the client.
+   * 发送一个HTTP应答给客户端
    * @param status The status of the request (e.g. 200 OK or 404 Not Found).
    * @param buf The content of the reply to send.
    */
@@ -430,6 +462,8 @@ public abstract class AbstractHttpQuery {
       done();
       return;
     }
+
+    //为这个响应添加content_type
     response.headers().set(HttpHeaders.Names.CONTENT_TYPE, contentType);
 
     // TODO(tsuna): Server, X-Backend, etc. headers.

@@ -57,6 +57,8 @@ import net.opentsdb.utils.JSON;
 
 /**
  * Implementation of the base serializer class with JSON as the format
+ * 实现使用JSON作为格式化基础序列化类
+ *
  * <p>
  * <b>Note:</b> This class is not final and the implementations are not either
  * so that we can extend this default class with slightly different methods
@@ -65,7 +67,9 @@ import net.opentsdb.utils.JSON;
  */
 class HttpJsonSerializer extends HttpSerializer {
 
-  /** Type reference for incoming data points */
+  /** Type reference for incoming data points
+   *  输入数据的类型应用
+   * */
   private static TypeReference<ArrayList<IncomingDataPoint>> TR_INCOMING =
     new TypeReference<ArrayList<IncomingDataPoint>>() {};
   
@@ -91,7 +95,10 @@ class HttpJsonSerializer extends HttpSerializer {
   
   /**
    * Constructor that sets the query object
+   * 设置查询对象的构造器
+   *
    * @param query Request/resposne object
+   *              请求/响应 对象
    */
   public HttpJsonSerializer(final HttpQuery query) {
     super(query);
@@ -128,7 +135,7 @@ class HttpJsonSerializer extends HttpSerializer {
    */
   @Override
   public List<IncomingDataPoint> parsePutV1() {
-    if (!query.hasContent()) {
+    if (!query.hasContent()) {//检查query是否符合要求
       throw new BadRequestException("Missing request content");
     }
 
@@ -136,11 +143,11 @@ class HttpJsonSerializer extends HttpSerializer {
     final String content = query.getContent().trim();
     final int firstbyte = content.charAt(0);
     try {
-      if (firstbyte == '{') {
-        final IncomingDataPoint dp = 
-          JSON.parseToObject(content, IncomingDataPoint.class);
+      if (firstbyte == '{') {//json字符串格
+        // 将指定的content(String) 转换成IncomingDataPoint类型
+        final IncomingDataPoint dp = JSON.parseToObject(content, IncomingDataPoint.class);
         final ArrayList<IncomingDataPoint> dps = 
-          new ArrayList<IncomingDataPoint>(1);
+          new ArrayList<IncomingDataPoint>(1); //可以看到这里的initialCapacity 为1
         dps.add(dp);
         return dps;
       } else {

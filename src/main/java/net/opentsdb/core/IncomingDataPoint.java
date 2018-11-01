@@ -22,13 +22,18 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * Bridging class that stores a normalized data point parsed from the "put" 
  * RPC methods and gets it ready for storage. Also has some helper methods that
  * were formerly in the Tags class for parsing values.
+ * 用于存储解析自put RPC方法的正常规格化数据，并让其存储。同时有一些以前是在Tags类中用于解析值的帮助方法
+ *
  * <p>
  * The data point value is a string in order to accept a wide range of values
  * including floating point and scientific. Before storage, the value will
  * be parsed to the appropriate numeric type.
+ * 数据点值是一个字符串，用于接受一个广范围的值包括（浮点值已经科学计数法）。在存储之前，值将会被解析成
+ *
  * <p>
  * Note the class is not marked as final since some serializers may want to
  * overload with their own fields or parsing methods.
+ * 一些类没有被标记为final，因为一些serializers可能需要使用它们自己的字段重载，或者是解析方法
  * @since 2.0
  */
 @JsonInclude(Include.NON_NULL)

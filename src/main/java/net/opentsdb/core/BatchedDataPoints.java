@@ -26,10 +26,15 @@ import org.hbase.async.Bytes.ByteMap;
 import net.opentsdb.meta.Annotation;
 
 /**
- * Receives new data points and stores them in compacted form. No points are 
- * written until {@code flushNow} is called. This ensures that true batch 
+ * Receives new data points and stores them in compacted form. No points are
+ * written until {@code flushNow} is called.
+ * 接收新的数据点，然后将其以压缩的方式存储。没有点被写，直到flushNow被调用
+ *
+ * This ensures that true batch
  * dynamics can be leveraged. This implementation will allow an entire hours 
  * worth of data to be written in a single transaction to the data table.
+ * 【不理解】这确保了真正的批处理动态可以被利用。这个实现将允许在一个事务中向数据表写入整个小时的数据。
+ *
  */
 final class BatchedDataPoints implements WritableDataPoints {
 
@@ -94,6 +99,10 @@ final class BatchedDataPoints implements WritableDataPoints {
    * Sets the metric name and tags of this batch. This method only need be 
    * called if there is a desire to reuse the data structure after the data has
    * been flushed. This will reset all cached information in this data structure.
+   * 设置此批数据的metric name 和 tags。这个方法仅仅需要被调用 当需要重用数据结构在数据已经被刷新之后。
+   * 这将重置在这个数据结构中的所有缓存的信息
+   *
+   *
    * @throws IllegalArgumentException if the metric name is empty or contains 
    * illegal characters or if the tags list is empty or one of the elements 
    * contains illegal characters.
@@ -117,6 +126,7 @@ final class BatchedDataPoints implements WritableDataPoints {
   /**
    * Resets the indices without overwriting the buffers. So the same amount of
    * space will remain allocated.
+   * 重置索引没有覆写buffers。所以相同数量空间将被报持占用
    */
   private void reset() {
     size = 0;

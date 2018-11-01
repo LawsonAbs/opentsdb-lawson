@@ -83,6 +83,11 @@ public abstract class RTPublisher {
    * byte array so we need to convert it back to an integer or floating point 
    * value. Instead of requiring every implementation to perform the calculation
    * we perform it here and let the implementer deal with the integer or float.
+   * 当一个新的原始数据被发布时由TSD调用此方法。因为这个方法被调用在一个数据点进入队列中，
+   * 值被转变为字节数组，所以我们需要将其转回来成一个整数或者是一个浮点数。
+   * 不是要求每个实现都执行计算，而是在这里执行，让实现人员处理整数或浮点数。
+   *
+   *
    * @param metric The name of the metric associated with the data point
    * @param timestamp Timestamp as a Unix epoch in seconds or milliseconds
    * (depending on the TSD's configuration)
@@ -90,9 +95,12 @@ public abstract class RTPublisher {
    * @param tags Tagk/v pairs
    * @param tsuid Time series UID for the value
    * @param flags Indicates if the byte array is an integer or floating point
-   * value
+   * value      表明字节数组是一个整数或者是一个浮点数
+   *
    * @return A deferred without special meaning to wait on if necessary. The 
    * value may be null but a Deferred must be returned.
+   *        如果有必要等待的话，则是一个没有特殊含义的deferred值可能为null，但是
+   *        Deferred对象必须返回
    */
   public final Deferred<Object> sinkDataPoint(final String metric, 
       final long timestamp, final byte[] value, final Map<String, String> tags, 
@@ -124,12 +132,15 @@ public abstract class RTPublisher {
   
   /**
    * Called any time a new data point is published
+   * 在新数据被发布时调用
+   *
    * @param metric The name of the metric associated with the data point
    * @param timestamp Timestamp as a Unix epoch in seconds or milliseconds
    * (depending on the TSD's configuration)
    * @param value Value for the data point
    * @param tags Tagk/v pairs
    * @param tsuid Time series UID for the value
+   *              时间序列UID的值
    * @return A deferred without special meaning to wait on if necessary. The 
    * value may be null but a Deferred must be returned.
    */

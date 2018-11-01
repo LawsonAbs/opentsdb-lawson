@@ -31,7 +31,9 @@ import ch.qos.logback.core.read.CyclicBufferAppender;
 import net.opentsdb.core.TSDB;
 import net.opentsdb.utils.JSON;
 
-/** The "/logs" endpoint. */
+/** The "/logs" endpoint.
+ * /logs端
+ * */
 final class LogsRpc implements HttpRpc {
 
   public void execute(final TSDB tsdb, final HttpQuery query) 

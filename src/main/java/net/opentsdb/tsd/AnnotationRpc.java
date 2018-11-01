@@ -32,9 +32,17 @@ import net.opentsdb.utils.JSONException;
 
 /**
  * Handles create, update, replace and delete calls for individual annotation
- * objects. Annotations are stored in the data table alongside data points.
- * Queries will return annotations along with the data if requested. This RPC
- * is only used for modifying the individual entries.
+ * objects.
+ * 处理对单个注释对象的创建、更新、替换和删除调用。
+ *
+ * Annotations are stored in the data table alongside data points.
+ * 注释与数据点一起存储在数据表中
+ *
+ * Queries will return annotations along with the data if requested.
+ * 如果发起请求，那么查询将会返回注释和数据
+ *
+ * This RPC is only used for modifying the individual entries.
+ * 这个RPC仅仅用于修改单个条目
  * @since 2.0
  */
 final class AnnotationRpc implements HttpRpc {
@@ -42,6 +50,8 @@ final class AnnotationRpc implements HttpRpc {
   
   /**
    * Performs CRUD methods on individual annotation objects.
+   * 在单独的注解对象中执行CRUD方法
+   *
    * @param tsdb The TSD to which we belong
    * @param query The query to parse and respond to
    */

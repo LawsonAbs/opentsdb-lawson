@@ -95,6 +95,8 @@ public final class TSDB {
 
   /** Client for the HBase cluster to use.
    * 联系HBase集群的client
+   *
+   * 01.这个client的实例化是在TSDB类的构造器中完成的
    * */
   final HBaseClient client;
 
@@ -124,9 +126,15 @@ public final class TSDB {
   
   /**
    * Row keys that need to be compacted.
+   * 需要被压缩的row keys
+   *
    * Whenever we write a new data point to a row, we add the row key to this
    * set.  Every once in a while, the compaction thread will go through old
    * row keys and will read re-compact them.
+   * 无论我们什么时候写入一个data point到一行中，我们都需要添加行键到这个set中。
+   * 每隔一段时间，压缩线程就会遍历旧的行键，并读取重新压缩后的行键。
+   *
+   * 这个CompactionQueue肯定是一个队列啦
    */
   private final CompactionQueue compactionq;
 
@@ -151,11 +159,15 @@ public final class TSDB {
   /** A filter plugin for allowing or blocking UIDs */
   private UniqueIdFilterPlugin uid_filter;
   
-  /** Writes rejected by the filter */ 
+  /** Writes rejected by the filter
+   * 因为过滤器导致的写拒绝次数
+   * */
   private final AtomicLong rejected_dps = new AtomicLong();
   private final AtomicLong rejected_aggregate_dps = new AtomicLong();
   
-  /** Datapoints Added */
+  /** Datapoints Added
+   * 被添加的datapoint 数目
+   * */
   private static final AtomicLong datapoints_added = new AtomicLong();
 
   /**
@@ -166,7 +178,9 @@ public final class TSDB {
    */
   public TSDB(final HBaseClient client, final Config config) {
     this.config = config;
+    //如果入参的client为null，那么将构造一个client，否则返回当前的这个非空client
     if (client == null) {
+      //这个async_config 代表的是配置
       final org.hbase.async.Config async_config;
       if (config.configLocation() != null && !config.configLocation().isEmpty()) {
         try {
@@ -178,6 +192,7 @@ public final class TSDB {
       } else {
         async_config = new org.hbase.async.Config();
       }
+      //overrideConfig: Allows for modifying properties after loading
       async_config.overrideConfig("hbase.zookeeper.znode.parent", 
           config.getString("tsd.storage.hbase.zk_basedir"));
       async_config.overrideConfig("hbase.zookeeper.quorum", 
@@ -222,7 +237,7 @@ public final class TSDB {
     }
     tag_names = new UniqueId(this, uidtable, TAG_NAME_QUAL, TAG_NAME_WIDTH, false);
     tag_values = new UniqueId(this, uidtable, TAG_VALUE_QUAL, TAG_VALUE_WIDTH, false);
-    compactionq = new CompactionQueue(this);
+    compactionq = new CompactionQueue(this);//很简单的实现，将当前的tsdb对象传入即可
     
     if (config.hasProperty("tsd.core.timezone")) {
       DateTime.setDefaultTimezone(config.getString("tsd.core.timezone"));
@@ -263,7 +278,9 @@ public final class TSDB {
     this(null, config);
   }
   
-  /** @return The data point column family name */
+  /** @return The data point column family name
+   *          数据点的列名
+   * */
   public static byte[] FAMILY() {
     return FAMILY;
   }
@@ -443,7 +460,8 @@ public final class TSDB {
   }
   
   /** 
-   * Returns the configured HBase client 
+   * Returns the configured HBase client
+   * 返回配置的Hbase Client
    * @return The HBase client
    * @since 2.0 
    */
@@ -783,7 +801,9 @@ public final class TSDB {
     }
   }
 
-  /** Returns a latency histogram for Put RPCs used to store data points. */
+  /** Returns a latency histogram for Put RPCs used to store data points.
+   *    返回一个延迟图像对于Put RPCs，用于去存储数据点
+   * */
   public Histogram getPutLatencyHistogram() {
     return IncomingDataPoints.putlatency;
   }
@@ -836,9 +856,12 @@ public final class TSDB {
 
   /**
    * Returns a new {@link WritableDataPoints} instance suitable for this TSDB.
+   * 返回一个是用于当前TSDB的新的WritableDataPoints类实例
+   *
    * <p>
    * If you want to add a single data-point, consider using {@link #addPoint}
    * instead.
+   * 如果你想添加单个数据点，请考虑使用addPoint()方法
    */
   public WritableDataPoints newDataPoints() {
     return new IncomingDataPoints(this);
@@ -846,10 +869,14 @@ public final class TSDB {
 
   /**
    * Returns a new {@link BatchedDataPoints} instance suitable for this TSDB.
-   * 
+   * 为当前的TSDB返回一个BatchedDataPoints 实例
+   *
    * @param metric Every data point that gets appended must be associated to this metric.
+   *               每个被追加的数据点必须与这个metric关联
    * @param tags The associated tags for all data points being added.
+   *             所有的数据点的相关tags会被追加
    * @return data structure which can have data points appended.
+   *         可以追加数据的数据结构（WritableDataPoints 的实现类 BatchDataPoints）
    */
   public WritableDataPoints newBatch(String metric, Map<String, String> tags) {
     return new BatchedDataPoints(this, metric, tags);
@@ -857,14 +884,21 @@ public final class TSDB {
 
   /**
    * Adds a single integer value data point in the TSDB.
-   * @param metric A non-empty string.
+   * 添加单个整型值到TSDB中
+   *
+   * @param metric A non-empty string. 非空字符串
    * @param timestamp The timestamp associated with the value.
    * @param value The value of the data point.
    * @param tags The tags on this series.  This map must be non-empty.
+   *
    * @return A deferred object that indicates the completion of the request.
+   *         一个代表完成请求的deferred对象
    * The {@link Object} has not special meaning and can be {@code null} (think
    * of it as {@code Deferred<Void>}). But you probably want to attach at
    * least an errback to this {@code Deferred} to handle failures.
+   * 类Object没有特殊的含义，并且其可以为null（将其想成Deferred<Void>）。但是你可能想添加至少一个errback
+   * 到这个Deferred对象去处理失败。
+   *
    * @throws IllegalArgumentException if the timestamp is less than or equal
    * to the previous timestamp added or 0 for the first timestamp, or if the
    * difference with the previous timestamp is too large.
@@ -879,17 +913,20 @@ public final class TSDB {
                                    final long timestamp,
                                    final long value,
                                    final Map<String, String> tags) {
-    final byte[] v;
+    //用字节数组v来接收值value
+      final byte[] v;
+    //首先判断是不是byte类型值
     if (Byte.MIN_VALUE <= value && value <= Byte.MAX_VALUE) {
       v = new byte[] { (byte) value };
-    } else if (Short.MIN_VALUE <= value && value <= Short.MAX_VALUE) {
+    } else if (Short.MIN_VALUE <= value && value <= Short.MAX_VALUE) {//接着判断是不是short类型值
       v = Bytes.fromShort((short) value);
-    } else if (Integer.MIN_VALUE <= value && value <= Integer.MAX_VALUE) {
+    } else if (Integer.MIN_VALUE <= value && value <= Integer.MAX_VALUE) {//最后判断是不是Integer类型值
       v = Bytes.fromInt((int) value);
-    } else {
+    } else {//否则将其从Long型转为Byte数组
       v = Bytes.fromLong(value);
     }
 
+    //为何将v.length-1 作为flags？
     final short flags = (short) (v.length - 1);  // Just the length.
     return addPointInternal(metric, timestamp, v, tags, flags);
   }
@@ -985,7 +1022,7 @@ public final class TSDB {
 
     IncomingDataPoints.checkMetricAndTags(metric, tags);
     final byte[] row = IncomingDataPoints.rowKeyTemplate(this, metric, tags);
-    final long base_time;
+    final long base_time;//这个值是用来做啥的？？？
     final byte[] qualifier = Internal.buildQualifier(timestamp, flags);
     
     if ((timestamp & Const.SECOND_MASK) != 0) {
@@ -997,28 +1034,44 @@ public final class TSDB {
     }
     
     /** Callback executed for chaining filter calls to see if the value
-     * should be written or not. */
+     * should be written or not.
+     * 为链接过滤器而执行的回调，去检测是否应该写入数据
+     *
+     * 注意这里的WriteCB实现了Callback接口
+     * WriteCB 见名思意，其是write 类的callback.
+     * */
     final class WriteCB implements Callback<Deferred<Object>, Boolean> {
+
+        //call()方法就是需要回调的函数
+        //传入的参数是allowed
       @Override
       public Deferred<Object> call(final Boolean allowed) throws Exception {
         if (!allowed) {
-          rejected_dps.incrementAndGet();
-          return Deferred.fromResult(null);
+          rejected_dps.incrementAndGet();//如果拒绝写入，则原子增加一个值
+          return Deferred.fromResult(null);//
         }
-        
-        Bytes.setInt(row, (int) base_time, metrics.width() + Const.SALT_WIDTH());
-        RowKey.prefixKeyWithSalt(row);
 
+        //setInt()：使用大端法
+          //对不理解base_time这个值
+        Bytes.setInt(row, (int) base_time, metrics.width() + Const.SALT_WIDTH());
+        RowKey.prefixKeyWithSalt(row);//为 row添加前缀
+
+
+        //这个result用于接收返回后的参数
         Deferred<Object> result = null;
-        if (config.enable_appends()) {
+        if (config.enable_appends()) {//如果开启追加功能的话
           final AppendDataPoints kv = new AppendDataPoints(qualifier, value);
           final AppendRequest point = new AppendRequest(table, row, FAMILY, 
               AppendDataPoints.APPEND_COLUMN_QUALIFIER, kv.getBytes());
           result = client.append(point);
         } else {
+          //这个base_time 应该就是后期在compact row key的时候用来检测是否old的标志
           scheduleForCompaction(row, (int) base_time);
+
           final PutRequest point = new PutRequest(table, row, FAMILY, qualifier, value);
-          result = client.put(point);
+
+          //put:Store data in hbase
+          result = client.put(point);//这个地方开始真正的put数据了
         }
 
         // Count all added datapoints, not just those that came in through PUT rpc
@@ -1594,11 +1647,18 @@ public final class TSDB {
 
   /**
    * Schedules the given row key for later re-compaction.
+   * 调度给出的row key，便于稍后的压缩操作
+   *
    * Once this row key has become "old enough", we'll read back all the data
    * points in that row, write them back to HBase in a more compact fashion,
    * and delete the individual data points.
+   * 一旦这个row key变的足够老了，我们将重读该行所有的数据，将它们写入到Hbase，
+   * 用一种压缩的方式，并且删除单独的数据点
+   *
    * @param row The row key to re-compact later.  Will not be modified.
+   *            稍后需要再压缩的row key。不会被修改
    * @param base_time The 32-bit unsigned UNIX timestamp.
+   *                  32位的正整数——Unix timestamp
    */
   final void scheduleForCompaction(final byte[] row, final int base_time) {
     if (config.enable_compactions()) {

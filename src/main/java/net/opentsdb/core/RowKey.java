@@ -123,18 +123,31 @@ final public class RowKey {
   /**
    * Calculates and writes an array of one or more salt bytes at the front of
    * the given row key. 
-   * 
+   * 在给出row key数组的前端计算并写一或多个salt bytes。【为什么需要写入多个salt bytes?】
+   *
    * The salt is calculated by taking the Java hash code of the metric and 
    * tag UIDs and returning a modulo based on the number of salt buckets.
    * The result will always be a positive integer from 0 to salt buckets.
-   * 
+   * salt的计算方式是采取对metric和tag UIDs 的java 哈希值，并且返回一个对salt buckets的模数。
+   * 结果将会总是一个在0——salt buckets之间的整数
+   *
+   *
+   * 我知道为什么在row中写入数据时，预留了salt的位置，这个可见方法
    * NOTE: The row key passed in MUST have allocated the {@link width} number of
    * bytes at the front of the row key or this call will overwrite data.
-   * 
+   * 注意：被传入的参数——row key 必须被分配width个字节，在row key前端，否则这个调用方法将会覆写数据。
+   *
    * WARNING: If the width is set to a positive value, then the bucket must be
    * at least 1 or greater.
+   * 警告：如果width被设置成一个正整数，俺么bucket必须至少为1或者更大
+   *
    * @param row_key The pre-allocated row key to write the salt to
+   *                预先分配的行键，将会写入salt值
    * @since 2.2
+   *
+   * Lawson:
+   * 01.可以看到用的是prefix key with salt  添加salt作为前缀
+   *
    */
   public static void prefixKeyWithSalt(final byte[] row_key) {
     if (Const.SALT_WIDTH() > 0) {
