@@ -129,9 +129,9 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
                               final MessageEvent msgevent) {
     try {
       final Object message = msgevent.getMessage();
-      if (message instanceof String[]) {
+      if (message instanceof String[]) {//这里是对message进行一个判断，如果是message 是string[]对象，那么使用handleTelnetRpc(...)方法
         handleTelnetRpc(msgevent.getChannel(), (String[]) message);
-      } else if (message instanceof HttpRequest) {
+      } else if (message instanceof HttpRequest) {//如果是HttpRequest请求，那么使用下面的handleHttpQuery进行处理
         handleHttpQuery(tsdb, msgevent.getChannel(), (HttpRequest) message);
       } else {
         logError(msgevent.getChannel(), "Unexpected message type "
@@ -166,10 +166,16 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
   /**
    * Using the request URI, creates a query instance capable of handling 
    * the given request.
+   * 使用请求的URI，创建一个有能力处理给出的请求的查询实例
+   *
    * @param tsdb the TSDB instance we are running within
+   *             我们正在运行的TSDB实例
    * @param request the incoming HTTP request
+   *                即将到来的HTTP请求
    * @param chan the {@link Channel} the request came in on.
+   *             到来的request对象 所附带的Channel
    * @return a subclass of {@link AbstractHttpQuery}
+   *            返回一个AbstractHttpQuery的抽象类
    * @throws BadRequestException if the request is invalid in a way that
    * can be detected early, here.
    */
@@ -182,10 +188,13 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
       throw new BadRequestException("Request URI is empty");
     } else if (uri.charAt(0) != '/') {
       throw new BadRequestException("Request URI doesn't start with a slash");
-    } else if (rpc_manager.isHttpRpcPluginPath(uri)) {
+    } else if (rpc_manager.isHttpRpcPluginPath(uri)) {// 在put数据时，这里的返回值应该是false，可以注意一下
       http_plugin_rpcs_received.incrementAndGet();
+
+      //HttpRpcPluginQuery类继承AbstractHttpQuery类
+      //这里的new其实就是super(tsdb,request,chan) => new AbstractHttpQuery(tsdb,request,chan);
       return new HttpRpcPluginQuery(tsdb, request, chan);
-    } else {
+    } else {//说明在put数据时，走得是下面这条路
       http_rpcs_received.incrementAndGet();
       HttpQuery builtinQuery = new HttpQuery(tsdb, request, chan);
       return builtinQuery;
@@ -195,8 +204,11 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
   /**
    * Helper method to apply CORS configuration to a request, either a built-in
    * RPC or a user plugin.
+   * 帮助方法应用CORS配置到一个请求，要么是一个内置的RPC要么是一个用户plugin
+   *
    * @return <code>true</code> if a status reply was sent (in the the case of
    * certain HTTP methods); <code>false</code> otherwise.
+   * 如果一个状态响应被发送（在某些HTTP方法的情况下）；否则相反
    */
   private boolean applyCorsConfig(final HttpRequest req, final AbstractHttpQuery query) 
         throws BadRequestException {
@@ -251,20 +263,31 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
    *
    * @param chan The channel on which the query was received.
    * @param req The parsed HTTP request.
+   *
+   *  01.这个类非常重要，只要是通过浏览器调用，则会来到这个方法中进行query处理
    */
   private void handleHttpQuery(final TSDB tsdb, final Channel chan, final HttpRequest req) {
-    AbstractHttpQuery abstractQuery = null;
+    AbstractHttpQuery abstractQuery = null;//定义个一个抽象的查询对象
     try {
+      //创建查询实例对象 => 在put数据时，使用的是HttpQuery(tsdb,req,chan)这个构造器
       abstractQuery = createQueryInstance(tsdb, req, chan);
+
+      //下面这个if是用于判断是否是chunked_request()请求
+      //这个chunked_requst 的意思是指：坏请求
       if (!tsdb.getConfig().enable_chunked_requests() && req.isChunked()) {
         logError(abstractQuery, "Received an unsupported chunked request: "
             + abstractQuery.request());
         abstractQuery.badRequest(new BadRequestException("Chunked request not supported."));
         return;
       }
+
+
       // NOTE: Some methods in HttpQuery have side-effects (getQueryBaseRoute and 
       // setSerializer for instance) so invocation order is important here.
-      final String route = abstractQuery.getQueryBaseRoute();
+        //得到这个query交给rpc处理的路由
+      final String  route = abstractQuery.getQueryBaseRoute();
+
+      //判断这个abstractQuery到底是什么类的Query
       if (abstractQuery.getClass().isAssignableFrom(HttpRpcPluginQuery.class)) {
         if (applyCorsConfig(req, abstractQuery)) {
           return;
@@ -276,12 +299,17 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
       } else {
           pluginQuery.notFound();
         }
-      } else if (abstractQuery.getClass().isAssignableFrom(HttpQuery.class)) {
-        final HttpQuery builtinQuery = (HttpQuery) abstractQuery;
-        builtinQuery.setSerializer();
-        if (applyCorsConfig(req, abstractQuery)) {
+      } else if (abstractQuery.getClass().isAssignableFrom(HttpQuery.class)) {//如果是一个put命令，那么应该是执行此分支
+        final HttpQuery builtinQuery = (HttpQuery) abstractQuery;//将query对象强转成HttpQuery对象
+        //为下面这个builtinQuery建立一个serializer
+          //01.可以看到这个方法没有返回值，只是对
+          builtinQuery.setSerializer();
+
+        if (applyCorsConfig(req, abstractQuery)) {//注意一下这里的返回值
           return;
         }
+
+        //注意下面rpc的值是多少？
         final HttpRpc rpc = rpc_manager.lookupHttpRpc(route);
         if (rpc != null) {
           rpc.execute(tsdb, builtinQuery);

@@ -54,7 +54,7 @@ final class CliOptions {
   /** Adds a --verbose flag.  */
   static void addVerbose(final ArgP argp) {
     argp.addOption("--verbose",
-                   "Print more logging messages and not just errors.");
+                   "CustomedMethod more logging messages and not just errors.");
     argp.addOption("-v", "Short for --verbose.");
   }
 

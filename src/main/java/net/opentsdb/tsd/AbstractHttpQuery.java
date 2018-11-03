@@ -219,7 +219,8 @@ public abstract class AbstractHttpQuery {
         //getUri() :Returns the URI (or path) of this request. 返回这个请求对象的URI(或者path)
         //getParameters():Returns the decoded key-value parameter pairs of the URI.返回从URI中解码出的key-value参数对
         //new 一个QueryStringDecoder，用于解析query中的参数
-        querystring = new QueryStringDecoder(request.getUri()).getParameters();
+        querystring = new QueryStringDecoder(request.getUri())
+                .getParameters();
       } catch (IllegalArgumentException e) {
         throw new BadRequestException("Bad query string: " + e.getMessage());
       }
@@ -338,7 +339,10 @@ public abstract class AbstractHttpQuery {
   /**
    * Parses the query string to determine the base route for handing a query
    * off to an RPC handler.
+    解析查询字符串以确定将查询传递给RPC处理程序的基本路由。
+
    * @return the base route
+   *        基础路由
    * @throws BadRequestException if some necessary part of the query cannot
    * be parsed.
    */

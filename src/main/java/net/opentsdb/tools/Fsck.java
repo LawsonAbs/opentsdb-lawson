@@ -1189,7 +1189,7 @@ final class Fsck {
    */
   public static void main(String[] args) throws Exception {
     ArgP argp = new ArgP();
-    argp.addOption("--help", "Print help information.");
+    argp.addOption("--help", "CustomedMethod help information.");
     CliOptions.addCommon(argp);
     FsckOptions.addDataOptions(argp);
     args = CliOptions.parse(argp, args);

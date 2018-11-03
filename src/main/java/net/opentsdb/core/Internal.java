@@ -805,11 +805,11 @@ public final class Internal {
    * Returns a 2 or 4 byte qualifier based on the timestamp and the flags. If
    * the timestamp is in seconds, this returns a 2 byte qualifier. If it's in
    * milliseconds, returns a 4 byte qualifier
-   * 返回一个2或4字节的qualifier 基于时间戳和标志。如果时间戳是秒级，则返回2字节的qualifier。
+   * 基于时间戳和标志，返回一个2或4字节的qualifier。如果时间戳是秒级，则返回2字节的qualifier。
    * 如果是毫秒级别，返回一个4字节的qualifier
    *
    * @param timestamp A Unix epoch timestamp in seconds or milliseconds
-   * @param flags Flags to set on the qualifier (length &| float)
+   * @param flags Flags to set on the qualifier (length &| float) 设置在qualifier上的flags（length &| float）
    * @return A 2 or 4 byte qualifier for storage in column or compacted column
    * @since 2.0
    */

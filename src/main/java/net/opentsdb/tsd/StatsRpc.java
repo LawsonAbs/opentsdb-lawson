@@ -321,7 +321,7 @@ public final class StatsRpc implements TelnetRpc, HttpRpc {
   }
   
   /**
-   * Print the detailed query stats to the caller using the proper serializer
+   * CustomedMethod the detailed query stats to the caller using the proper serializer
    * @param query The query to answer to
    * @throws BadRequestException if the API version hasn't been implemented
    * yet

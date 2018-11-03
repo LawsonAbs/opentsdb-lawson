@@ -53,7 +53,7 @@ import com.stumbleupon.async.Deferred;
 
 /**
  * Binds together an HTTP request and the channel on which it was received.
- * 将一个HTTP请求和接收到的通道绑定在一起。[看来像是使用的nio]
+ * 将一个HTTP请求和该请求接收到的通道绑定在一起。 [看来像是使用的nio] => netty
  *
  * It makes it easier to provide a few utility methods to respond to the
  * requests.
@@ -77,11 +77,16 @@ final class HttpQuery extends AbstractHttpQuery {
   private static final Histogram httplatency =
     new Histogram(16000, (short) 2, 100);
 
-  /** Maps Content-Type to a serializer */
+  /** Maps Content-Type to a serializer
+   * 将内容类型映射成serializer
+   * */
   private static HashMap<String, Constructor<? extends HttpSerializer>>
     serializer_map_content_type = null;
 
-  /** Maps query string names to a serializer */
+  /** Maps query string names to a serializer
+   * 映射查询字符串名到一个序列化器。
+   *
+   * */
   private static HashMap<String, Constructor<? extends HttpSerializer>>
     serializer_map_query_string = null;
 
@@ -137,7 +142,8 @@ final class HttpQuery extends AbstractHttpQuery {
     return this.api_version;
   }
 
-  /** @return Whether or not to show stack traces in errors @since 2.0 */
+  /** @return Whether or not to show stack traces in errors
+   * @since 2.0 */
   public boolean showStackTrace() {
     return this.show_stack_trace;
   }
@@ -150,7 +156,13 @@ final class HttpQuery extends AbstractHttpQuery {
   }
 
   /** @return The selected seralizer. Will return null if {@link #setSerializer}
-   * hasn't been called yet @since 2.0  */
+   * hasn't been called yet
+   *
+   * @since 2.0
+   *
+   * 选择的serializer。
+   * 如果setSerializer没有被调用，那么将会返回null
+   * */
   public HttpSerializer serializer() {
     return this.serializer;
   }
@@ -302,14 +314,23 @@ final class HttpQuery extends AbstractHttpQuery {
 
   /**
    * Sets the local serializer based on a query string parameter or content type.
+   * 基于查询字符串或者一个内容类型 设置 本地序列化对象
+   *
    * <p>
    * If the caller supplies a "serializer=" parameter, the proper serializer is
    * loaded if found. If the serializer doesn't exist, an exception will be
    * thrown and the user gets an error
+   * 如果调用者应用了一个"serializer="参数，如果发现了适当的serializer，那么其serializer将会被加载。
+   * 如果一个serializer不存在，一个异常将会被抛出并且用户将会得到一个错误
+   *
+   *
    * <p>
    * If no query string parameter is supplied, the Content-Type header for the
    * request is parsed and if a matching serializer is found, it's used.
    * Otherwise we default to the HttpJsonSerializer.
+   * 如果查询字符串参数被应用，请求的内容头将会被解析，并且如果一个匹配的serializer被发现，将会使用这个serializer。
+   * 否则我们将会使用默认的HttpJsonSerializer。
+   *
    * @throws InvocationTargetException if the serializer cannot be instantiated
    * @throws IllegalArgumentException if the serializer cannot be instantiated
    * @throws InstantiationException if the serializer cannot be instantiated
@@ -319,17 +340,28 @@ final class HttpQuery extends AbstractHttpQuery {
    */
   public void setSerializer() throws InvocationTargetException,
     IllegalArgumentException, InstantiationException, IllegalAccessException {
-    if (this.hasQueryStringParam("serializer")) {
+    if (this.hasQueryStringParam("serializer")) {//判断是否有serializer参数
       final String qs = this.getQueryStringParam("serializer");
+      //研究一下整个流程：
+        //01.qs 来自于query的自身属性值
+        //02.接着根据qs名，得到相应的serializer值
+        //03.这里返回值类型是Constructor<? extends HttpSerializer>。原因是serializer_map_query_string
+        // 是一个map，其中存储的就是string -> Constructor<? extends HttpSerializer>
       Constructor<? extends HttpSerializer> ctor =
         serializer_map_query_string.get(qs);
+
+        //如果为null
       if (ctor == null) {
-        this.serializer = new HttpJsonSerializer(this);
-        throw new BadRequestException(HttpResponseStatus.BAD_REQUEST,
+        this.serializer = new HttpJsonSerializer(this);//直接实例化一个默认的的HttpJsonSerializer
+
+          //但是我有点不解的是，为什么自己实例化之后，还会再抛出一个异常呢？
+          throw new BadRequestException(HttpResponseStatus.BAD_REQUEST,
             "Requested serializer was not found",
             "Could not find a serializer with the name: " + qs);
       }
 
+        //这里是没有抛出异常执行的结果
+        //通过ctor 的newInstance()方法得到一个serializer
       this.serializer = ctor.newInstance(this);
       return;
     }

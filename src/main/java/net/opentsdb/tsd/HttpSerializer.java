@@ -163,7 +163,7 @@ public abstract class HttpSerializer {
   
   /**
    * Parses one or more data points for storage
-   * 解析一或多个数据点用于存储
+   * 解析一或多个被存储的数据点
    * @return an array of data points to process for storage
    *            用于存储的一组数据点
    *

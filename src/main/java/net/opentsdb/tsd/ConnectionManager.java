@@ -36,6 +36,8 @@ import net.opentsdb.stats.StatsCollector;
  * 跟踪所有现有的连接
  *
  * ConnectionManager : 连接管理
+ *
+ * 01.如果我使用openTSDBClient客户端连接时断开，则会在此类中抛错
  */
 final class ConnectionManager extends SimpleChannelHandler {
 

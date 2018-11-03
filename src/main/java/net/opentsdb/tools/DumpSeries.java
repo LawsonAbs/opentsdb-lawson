@@ -108,7 +108,7 @@ final class DumpSeries {
             final byte[] key = row.get(0).key();
             final long base_time = Internal.baseTime(tsdb, key);
             final String metric = Internal.metricName(tsdb, key);
-            // Print the row key.
+            // CustomedMethod the row key.
             if (!importformat) {
               buf.append(Arrays.toString(key))
                       .append(' ')
@@ -125,7 +125,7 @@ final class DumpSeries {
               System.out.print(buf);
             }
 
-            // Print individual cells.
+            // CustomedMethod individual cells.
             buf.setLength(0);
             if (!importformat) {
               buf.append("  ");

@@ -246,7 +246,9 @@ public class Config {
     return scanner_max_num_rows;
   }
   
-  /** @return whether or not chunked requests are supported */
+  /** @return whether or not chunked requests are supported
+   *        是否支持组块请求  => what is chunked request?
+   * */
   public boolean enable_chunked_requests() {
     return enable_chunked_requests;
   }

@@ -68,7 +68,7 @@ import net.opentsdb.utils.JSON;
 class HttpJsonSerializer extends HttpSerializer {
 
   /** Type reference for incoming data points
-   *  输入数据的类型应用
+   *  输入数据的类型引用
    * */
   private static TypeReference<ArrayList<IncomingDataPoint>> TR_INCOMING =
     new TypeReference<ArrayList<IncomingDataPoint>>() {};
@@ -131,7 +131,14 @@ class HttpJsonSerializer extends HttpSerializer {
    * Parses one or more data points for storage
    * @return an array of data points to process for storage
    * @throws JSONException if parsing failed
+   *                       如果解析失败的话，抛出JSONException
+   *
    * @throws BadRequestException if the content was missing or parsing failed
+   *                       如果内容丢失或者解析失败，则抛出BadRequestException
+   *
+   * 01.这个类（HttpJsonSerializer）继承自HttpSerializer
+   * 02.这个方法被（写入数据过程时调用） => PutDataPointRpc类调用
+   * 03.返回的是一个List<IncomingDataPoint>
    */
   @Override
   public List<IncomingDataPoint> parsePutV1() {

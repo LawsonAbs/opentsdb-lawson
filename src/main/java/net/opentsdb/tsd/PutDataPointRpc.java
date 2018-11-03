@@ -12,18 +12,15 @@
 // see <http://www.gnu.org/licenses/>.
 package net.opentsdb.tsd;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.stumbleupon.async.Callback;
 import com.stumbleupon.async.Deferred;
 import com.stumbleupon.async.TimeoutException;
-
+import net.opentsdb.core.IncomingDataPoint;
+import net.opentsdb.core.TSDB;
+import net.opentsdb.core.Tags;
+import net.opentsdb.stats.StatsCollector;
+import net.opentsdb.uid.NoSuchUniqueName;
+import net.opentsdb.utils.CustomedMethod;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
@@ -32,11 +29,11 @@ import org.jboss.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.opentsdb.core.IncomingDataPoint;
-import net.opentsdb.core.TSDB;
-import net.opentsdb.core.Tags;
-import net.opentsdb.stats.StatsCollector;
-import net.opentsdb.uid.NoSuchUniqueName;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Implements the "put" telnet-style command. */
 final class PutDataPointRpc implements TelnetRpc, HttpRpc {
@@ -113,7 +110,7 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
    *         如果用户提供了错误的数据
    * @since 2.0
    */
-  public void execute(final TSDB tsdb, final HttpQuery query) 
+  public void execute(final TSDB tsdb, final HttpQuery query)
     throws IOException {
     requests.incrementAndGet();
     
@@ -124,30 +121,61 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
           "Method not allowed", "The HTTP method [" + query.method().getName() +
           "] is not permitted for this endpoint");
     }
-    //
+    //query.serializer()用于得到一个序列化器  =>  默认是HttpJsonSerializer
+      //01.如下的dps中存储的就是我们所需要的写入hbase的值
+      //02.注意观察dps的值
+      //03.执行到query.serializer().parsePutV1()时，稍稍停顿了1s
     final List<IncomingDataPoint> dps = query.serializer().parsePutV1();
     if (dps.size() < 1) {
       throw new BadRequestException("No datapoints found in content");
     }
-    
+
+    //判断query中是否包含这些参数：details -> summay -> sync -> sync_timeout
     final boolean show_details = query.hasQueryStringParam("details");
     final boolean show_summary = query.hasQueryStringParam("summary");
     final boolean synchronous = query.hasQueryStringParam("sync");
     final int sync_timeout = query.hasQueryStringParam("sync_timeout") ? 
         Integer.parseInt(query.getQueryStringParam("sync_timeout")) : 0;
     // this is used to coordinate timeouts
+
+      final boolean host = query.hasQueryStringParam("host");
+
+      //-----------------------以下部分用于调试输出----------------------------------------------
+      String queryContent = query.getContent();
+      CustomedMethod.printSuffix("queryContent is "+queryContent);
+
+      Map<String, List<String>> queryMap = query.getQueryString();
+      CustomedMethod.printDelimiter("begin");
+      Set set = queryMap.keySet();//将key装入set 中
+      Iterator it = set.iterator();//返回set的迭代器【其实就是装入的key值】
+      while(it.hasNext()){
+          String key = (String)it.next();
+          List<String> tempList = queryMap.get(key);
+          System.out.println("key = "+key+"value = ");
+          for(String value : tempList){
+              System.out.print(value+"...");
+          }
+          System.out.println();
+      }
+      CustomedMethod.printDelimiter("end");
+      //----------------------------------------------------------------------------------
+
+
     final AtomicBoolean sending_response = new AtomicBoolean();
     sending_response.set(false);
         
     final ArrayList<HashMap<String, Object>> details = show_details
       ? new ArrayList<HashMap<String, Object>>() : null;
     int queued = 0;
+
+    //又见Deferred类型
     final List<Deferred<Boolean>> deferreds = synchronous ? 
         new ArrayList<Deferred<Boolean>>(dps.size()) : null;
     for (final IncomingDataPoint dp : dps) {
-
-      /** Handles passing a data point to the storage exception handler if 
-       * we were unable to store it for any reason */
+        /** Handles passing a data point to the storage exception handler if
+         *  we were unable to store it for any reason
+         *
+         * */
       final class PutErrback implements Callback<Boolean, Exception> {
         public Boolean call(final Exception arg) {
           handleStorageException(tsdb, dp, arg);
@@ -164,7 +192,9 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
         }
       }
       
-      /** Simply marks the put as successful */
+      /**Simply marks the put as successful
+       * 简单标记put是成功的
+       * */
       final class SuccessCB implements Callback<Boolean, Object> {
         @Override
         public Boolean call(final Object obj) {
@@ -174,16 +204,21 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
           return "HTTP Put success CB";
         }
       }
-      
+
+        //判断数据点中的属性是否符合要求
       try {
+          //01.首先判断metric
+          //在if中再次使用if(show_details)的原因是，如果用户想查看detail信息。
         if (dp.getMetric() == null || dp.getMetric().isEmpty()) {
           if (show_details) {
             details.add(this.getHttpDetails("Metric name was empty", dp));
           }
           LOG.warn("Metric name was empty: " + dp);
           illegal_arguments.incrementAndGet();
-          continue;
+          continue; //注意这里使用的是continue，而不是break
         }
+
+          //02.再判断时间戳
         if (dp.getTimestamp() <= 0) {
           if (show_details) {
             details.add(this.getHttpDetails("Invalid timestamp", dp));
@@ -192,6 +227,8 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
           illegal_arguments.incrementAndGet();
           continue;
         }
+
+        //03.接着判断值
         if (dp.getValue() == null || dp.getValue().isEmpty()) {
           if (show_details) {
             details.add(this.getHttpDetails("Empty value", dp));
@@ -200,6 +237,8 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
           invalid_values.incrementAndGet();
           continue;
         }
+
+        //04.最后判断Tags
         if (dp.getTags() == null || dp.getTags().size() < 1) {
           if (show_details) {
             details.add(this.getHttpDetails("Missing tags", dp));
@@ -209,9 +248,16 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
           continue;
         }
         final Deferred<Object> deferred;
+
+        //这里使用Tags类中的looksLikeInteger()方法显得有点儿不合适，应该将这个方法抽成一个单独的Util
+          //不然你会以为这是在处理tags
         if (Tags.looksLikeInteger(dp.getValue())) {
-          deferred = tsdb.addPoint(dp.getMetric(), dp.getTimestamp(), 
-              Tags.parseLong(dp.getValue()), dp.getTags());
+          //addPoint()方法返回一个Deferred对象
+            //01.addPoint()方法
+            deferred = tsdb.addPoint(
+                  dp.getMetric(),
+                  dp.getTimestamp(),
+                  Tags.parseLong(dp.getValue()), dp.getTags());
         } else {
           deferred = tsdb.addPoint(dp.getMetric(), dp.getTimestamp(), 
               Float.parseFloat(dp.getValue()), dp.getTags());
@@ -502,8 +548,10 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
   
   /**
    * Simple helper to format an error trying to save a data point
+   * 尝试存储一个数据点出错时，格式化这些数据点的简单脚本
+   *
    * @param message The message to return to the user
-   * @param dp The datapoint that caused the error
+   * @param dp The datapoint that caused the error 造成错误的datapoint
    * @return A hashmap with information
    * @since 2.0
    */

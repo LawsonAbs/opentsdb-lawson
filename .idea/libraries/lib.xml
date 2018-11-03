@@ -10,6 +10,7 @@
       <root url="jar://$USER_HOME$/.ideaLibSources/asynchbase-1.7.2-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ideaLibSources/async-1.4.0-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ideaLibSources/jackson-databind-2.4.3-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.ideaLibSources/guava-18.0-sources.jar!/" />
     </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/src/main/resources/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/src/main/resources/lib" recursive="false" type="SOURCES" />

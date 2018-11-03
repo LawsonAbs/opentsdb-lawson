@@ -20,7 +20,10 @@ import net.opentsdb.stats.StatsCollector;
 
 /**
  * A filter that can determine whether or not time series should be allowed 
- * assignment based on their metric and tags. This is useful for such 
+ * assignment based on their metric and tags.
+ * 一个过滤器基于它们的metric 和 tags，去判断是否时间序列应该被允许分配
+ *
+ * This is useful for such
  * situations as:
  * <ul><li>Enforcing naming standards</li>
  * <li>Blacklisting certain names or properties</li>
@@ -73,9 +76,15 @@ public abstract class WriteableDataPointFilterPlugin {
   
   /**
    * Determine whether or not the data point should be stored.
+   * 判断数据点是否应该被存储
+   *
    * If the data should not be stored, the implementation can return false or an 
    * exception in the deferred object. Otherwise it should return true and the
    * data point will be written to storage.
+   * 如果数据点不应该被存储，实现将会返回false，或者会在deferred对象中抛出一个异常。
+   * 否则它将返回true，并且数据点将会被写入存储器
+   *
+   *
    * @param metric The metric name for the data point
    * @param timestamp The timestamp of the data
    * @param value The value encoded as either an integer or floating point value
@@ -92,8 +101,10 @@ public abstract class WriteableDataPointFilterPlugin {
   
   /**
    * Whether or not the filter should process data points.
+   * filter是否应该处理数据点
    * @return False if {@link #allowDataPoint(String, long, byte[], Map, short)}
    * should NOT be called, true if it should.
+   * 如果allowDataPoint(String,long....)不应该被调用，则返回false;如果它应该调用，则返回true.
    */
   public abstract boolean filterDataPoints();
 }

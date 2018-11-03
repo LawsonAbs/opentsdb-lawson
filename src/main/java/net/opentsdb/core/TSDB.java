@@ -153,7 +153,9 @@ public final class TSDB {
   /** Plugin for dealing with data points that can't be stored */
   private StorageExceptionHandler storage_exception_handler = null;
 
-  /** A filter plugin for allowing or blocking time series */
+  /** A filter plugin for allowing or blocking time series
+   * 允许或阻塞时间序列的过滤器插件
+   * */
   private WriteableDataPointFilterPlugin ts_filter;
   
   /** A filter plugin for allowing or blocking UIDs */
@@ -417,7 +419,8 @@ public final class TSDB {
           + storage_exception_handler.version());
     }
     
-    // Writeable Data Point Filter
+    // Writeable Data Point Filter =>写数据过滤器
+      //不过Config类中的tsd.timeseriesfilter.enable 的值是 false
     if (config.getBoolean("tsd.timeseriesfilter.enable")) {
       ts_filter = PluginLoader.loadSpecificPlugin(
           config.getString("tsd.timeseriesfilter.plugin"), 
@@ -908,6 +911,9 @@ public final class TSDB {
    * elements contains illegal characters.
    * @throws HBaseException (deferred) if there was a problem while persisting
    * data.
+   *
+   * 01.在PutDataPointsRpc类中使用到此方法  => 主要是tsdb.addPoint()
+   *
    */
   public Deferred<Object> addPoint(final String metric,
                                    final long timestamp,
@@ -915,7 +921,8 @@ public final class TSDB {
                                    final Map<String, String> tags) {
     //用字节数组v来接收值value
       final byte[] v;
-    //首先判断是不是byte类型值
+
+      //首先判断是不是byte类型值
     if (Byte.MIN_VALUE <= value && value <= Byte.MAX_VALUE) {
       v = new byte[] { (byte) value };
     } else if (Short.MIN_VALUE <= value && value <= Short.MAX_VALUE) {//接着判断是不是short类型值
@@ -1023,7 +1030,9 @@ public final class TSDB {
     IncomingDataPoints.checkMetricAndTags(metric, tags);
     final byte[] row = IncomingDataPoints.rowKeyTemplate(this, metric, tags);
     final long base_time;//这个值是用来做啥的？？？
-    final byte[] qualifier = Internal.buildQualifier(timestamp, flags);
+
+      //注意研究这里的qualifier的值
+      final byte[] qualifier = Internal.buildQualifier(timestamp, flags);
     
     if ((timestamp & Const.SECOND_MASK) != 0) {
       // drop the ms timestamp to seconds to calculate the base timestamp
@@ -1039,6 +1048,8 @@ public final class TSDB {
      *
      * 注意这里的WriteCB实现了Callback接口
      * WriteCB 见名思意，其是write 类的callback.
+     *
+     * 01.进入到这个方法中， 这个WriteCB方法会被调用么？如果没有被调用，那么会在什么时候进行调用呢？
      * */
     final class WriteCB implements Callback<Deferred<Object>, Boolean> {
 
@@ -1118,11 +1129,14 @@ public final class TSDB {
         return "addPointInternal Write Callback";
       }
     }
-    
+
+    //这里的ts_filter 应该为null[在大多数情况下，都是null]
     if (ts_filter != null && ts_filter.filterDataPoints()) {
       return ts_filter.allowDataPoint(metric, timestamp, value, tags, flags)
           .addCallbackDeferring(new WriteCB());
     }
+
+
     return Deferred.fromResult(true).addCallbackDeferring(new WriteCB());
   }
 

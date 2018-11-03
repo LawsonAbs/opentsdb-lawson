@@ -78,14 +78,22 @@ public final class RpcManager {
   private static final Logger LOG = LoggerFactory.getLogger(RpcManager.class);
 
   /** This is base path where {@link HttpRpcPlugin}s are rooted.  It's used
-   * to match incoming requests. */
+   * to match incoming requests.
+   *
+   * 它被用于匹配到来的请求
+   * */
   @VisibleForTesting
   protected static final String PLUGIN_BASE_WEBPATH = "plugin";
 
   /** Splitter for web paths.  Removes empty strings to handle trailing or
    * leading slashes.  For instance, all of <code>/plugin/mytest</code>,
    * <code>plugin/mytest/</code>, and <code>plugin/mytest</code> will be
-   * split to <code>[plugin, mytest]</code>. */
+   * split to <code>[plugin, mytest]</code>.
+   *
+   * 将web paths分割。移除空字符串用于处理前导或者末尾的斜杠。例如：所有的/plugin/mytest
+   * plugin/mytest/ 以及plugin/mytest将会被分割成[plugin,mytest]
+   *
+   * */
   private static final Splitter WEBPATH_SPLITTER = Splitter.on('/')
       .trimResults()
       .omitEmptyStrings();
@@ -101,7 +109,11 @@ public final class RpcManager {
 
   /** Commands we can serve on the simple, telnet-style RPC interface. */
   private ImmutableMap<String, TelnetRpc> telnet_commands;
-  /** Commands we serve on the HTTP interface. */
+  /** Commands we serve on the HTTP interface.
+   * 在Http接口上提供的命令
+   *
+   * 01.注意类型是ImmutableMap[不可变Map]类型
+   * */
   private ImmutableMap<String, HttpRpc> http_commands;
   /** HTTP commands from user plugins. */
   private ImmutableMap<String, HttpRpcPlugin> http_plugin_commands;
@@ -191,9 +203,15 @@ public final class RpcManager {
 
   /**
    * Lookup a built-in {@link HttpRpc} based on the given {@code queryBaseRoute}.
+   * 根据给定的queryBaseRoute，查找一个内置的HttpRpc
+   *
    * The lookup is based on exact match of the input parameter and the registered
+   * 查找基于输入参数和注册参数的精确匹配
+   *
    * {@link HttpRpc}s.
    * @param queryBaseRoute the HTTP query's base route, with no trailing or
+   *                       Http请求的基础路由
+   *
    * leading slashes.  For example: {@code api/query}
    * @return the {@link HttpRpc} for the given {@code queryBaseRoute} or
    * {@code null} if not found.
@@ -217,24 +235,34 @@ public final class RpcManager {
 
   /**
    * @param uri HTTP request URI, with or without query parameters.
+   *            Http请求uri，有或者没有请求参数
+   *
    * @return {@code true} if the URI represents a request for a
-   * {@link HttpRpcPlugin}; {@code false} otherwise.  Note that this
+   * {@link HttpRpcPlugin}; {@code false} otherwise.
+   * 如果URI代表一个HttpRpcPlugin的请求参数，则返回true，否则返回false。
+   *
+   * Note that this
    * method returning true <strong>says nothing</strong> about
    * whether or not there is a {@link HttpRpcPlugin} registered
    * at the given URI, only that it's a valid RPC plugin request.
    */
   boolean isHttpRpcPluginPath(final String uri) {
+    //如果uri不合格的话
     if (Strings.isNullOrEmpty(uri) || uri.length() <= PLUGIN_BASE_WEBPATH.length()) {
       return false;
     } else {
-      // Don't consider the query portion, if any.
-      int qmark = uri.indexOf('?');
+      // Don't consider the query portion, if any.即便有查询部分，也不予考虑
+      int qmark = uri.indexOf('?');//  一般得到的uri是这个样子： /api/put?summary
       String path = uri;
       if (qmark != -1) {
-        path = uri.substring(0, qmark);
+        path = uri.substring(0, qmark);//针对上述的例子，那么这里的path = /api/put
       }
 
+      //这里的parts的值应该就是[api,put]
       final List<String> parts = WEBPATH_SPLITTER.splitToList(path);
+
+      //这里的parts.size() >1 为true 但是parts.get(0).equals(...)为false。
+        //PLUGIN_BASE_WEBPATH = plugin， 但是parts.get(0) = api
       return (parts.size() > 1 && parts.get(0).equals(PLUGIN_BASE_WEBPATH));
     }
   }

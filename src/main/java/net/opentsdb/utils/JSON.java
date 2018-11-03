@@ -163,6 +163,8 @@ public final class JSON {
 
   /**
    * Deserializes a JSON formatted string to a specific class type
+   * 反序列化一个Json格式字符串到一个指定的类类型
+   *
    * @param json The string to deserialize
    * @param type A type definition for a complex object
    * @return An object of the {@code pojo} type

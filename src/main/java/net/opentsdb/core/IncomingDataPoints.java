@@ -321,14 +321,15 @@ final class IncomingDataPoints implements WritableDataPoints {
     }
     
     /** Callback executed for chaining filter calls to see if the value
-     * should be written or not. */
+     * should be written or not.
+     * 为链接过滤器调用而执行的回调，以查看是否应该写入该值。
+     * */
     final class WriteCB implements Callback<Deferred<Object>, Boolean> {
       @Override
       public Deferred<Object> call(final Boolean allowed) throws Exception {
         if (!allowed) {
           return Deferred.fromResult(null);
         }
-        
 
         last_ts = (ms_timestamp ? timestamp : timestamp * 1000);
 
@@ -389,9 +390,17 @@ final class IncomingDataPoints implements WritableDataPoints {
     }
     
     if (tsdb.getTSfilter() != null && tsdb.getTSfilter().filterDataPoints()) {
-      return tsdb.getTSfilter().allowDataPoint(metric, timestamp, value, tags, flags)
+
+        //这个allowDataPoint()方法是一个抽象方法，它在哪里调用具体方法的呢？
+        //01.会是下面这个addCallbackDeferring(new WriteCB())方法引起调用么？
+        //02.
+        return tsdb.getTSfilter().allowDataPoint(metric, timestamp, value, tags, flags)
           .addCallbackDeferring(new WriteCB());
     }
+
+    //fromResult():Constructs a Deferred with a result that's readily available.
+      // => 构建一个Deferred对象使用一个易读的结果
+    //addCallbackDeferring(): Registers a callback.
     return Deferred.fromResult(true).addCallbackDeferring(new WriteCB());
   }
 

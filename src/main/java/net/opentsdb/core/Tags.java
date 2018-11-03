@@ -33,7 +33,10 @@ import net.opentsdb.uid.NoSuchUniqueId;
 import net.opentsdb.uid.NoSuchUniqueName;
 import net.opentsdb.utils.Pair;
 
-/** Helper functions to deal with tags. */
+/** Helper functions to deal with tags.
+ * 处理tags的帮助函数类
+ *
+ * */
 public final class Tags {
 
   private static final Logger LOG = LoggerFactory.getLogger(Tags.class);
@@ -812,10 +815,15 @@ public final class Tags {
   
   /**
    * Returns true if the given string looks like an integer.
+   * 如果给定的字符串看起来像是一个数字，那么返回true
+   *
    * <p>
    * This function doesn't do any checking on the string other than looking
    * for some characters that are generally found in floating point values
    * such as '.' or 'e'.
+   * 这个函数不会在字符串上做任何的检查，除了看一些经常出现在浮点数值中的字符，例如'.'或者'e'
+   *
+   * 01.这个也太糙了。 --> 如果只是检查部分字符就判断是不是浮点数，会存在很大问题
    * @since 1.1
    */
   public static boolean looksLikeInteger(final String value) {
