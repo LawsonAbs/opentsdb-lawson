@@ -40,16 +40,20 @@ import net.opentsdb.core.TSDB;
 import net.opentsdb.stats.StatsCollector;
 
 /**
- * Stateless handler for all RPCs: telnet-style, built-in or plugin
- * HTTP.
+ * Stateless handler for all RPCs: telnet-style, built-in or plugin HTTP.
+ * 针对所有RPCs的无状态的调用，：telnet-style,built-in或者插件HTTP
+ *
  */
 final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(RpcHandler.class);
-  
+
+  //如下三个变量，分别表示通过不同的方式引起的rpc调用
   private static final AtomicLong telnet_rpcs_received = new AtomicLong();
   private static final AtomicLong http_rpcs_received = new AtomicLong();
   private static final AtomicLong http_plugin_rpcs_received = new AtomicLong();
+
+  //异常捕捉
   private static final AtomicLong exceptions_caught = new AtomicLong();
 
   /** RPC executed when there's an unknown telnet-style command. */
@@ -302,7 +306,7 @@ final class RpcHandler extends IdleStateAwareChannelUpstreamHandler {
       } else if (abstractQuery.getClass().isAssignableFrom(HttpQuery.class)) {//如果是一个put命令，那么应该是执行此分支
         final HttpQuery builtinQuery = (HttpQuery) abstractQuery;//将query对象强转成HttpQuery对象
         //为下面这个builtinQuery建立一个serializer
-          //01.可以看到这个方法没有返回值，只是对
+          //01.可以看到这个方法没有返回值。setxxx()方法建立一个serializer
           builtinQuery.setSerializer();
 
         if (applyCorsConfig(req, abstractQuery)) {//注意一下这里的返回值

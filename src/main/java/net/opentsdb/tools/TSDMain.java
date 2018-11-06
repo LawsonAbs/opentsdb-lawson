@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.opentsdb.utils.*;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerBossPool;
@@ -36,14 +37,10 @@ import net.opentsdb.core.TSDB;
 import net.opentsdb.core.Const;
 import net.opentsdb.tsd.PipelineFactory;
 import net.opentsdb.tsd.RpcManager;
-import net.opentsdb.utils.Config;
-import net.opentsdb.utils.FileSystem;
-import net.opentsdb.utils.Pair;
-import net.opentsdb.utils.PluginLoader;
-import net.opentsdb.utils.Threads;
 
 /**
  * Main class of the TSD, the Time Series Daemon.
+ * TSD主类，时间序列守护线程
  */
 final class TSDMain {
 
@@ -217,7 +214,7 @@ final class TSDMain {
       tsdb.checkNecessaryTablesExist().joinUninterruptibly();
         System.out.println("###########################################################");
 
-
+        //please go into the method to look
       registerShutdownHook();
 
       //ServerBootstrap: A helper class which creates a new server-side Channel and accepts incoming connections.
@@ -225,8 +222,8 @@ final class TSDMain {
       final ServerBootstrap server = new ServerBootstrap(factory);
       
       // This manager is capable of lazy init, but we force an init here to fail fast.
-      // RpcManager : Manager for the lifecycle of HttpRpcs,TelnetRpcs,RpcPlugins, and HttpRpcPlugin
-      //This process is important, you should get the complete understand!!!!
+      // RpcManager : Manager for the lifecycle of HttpRpcs, TelnetRpcs, RpcPlugins, and HttpRpcPlugin
+      // This process is important, you should get the complete understand!!!!
       final RpcManager manager = RpcManager.instance(tsdb);
 
       server.setPipelineFactory(new PipelineFactory(tsdb, manager, connections_limit));
@@ -243,13 +240,20 @@ final class TSDMain {
       // null is interpreted as the wildcard address.  null被解释为通配符地址。
       //This class represents an Internet Protocol (IP) address. 这个类代表一个IP地址
       InetAddress bindAddress = null;
+
+      //default_map.put("tsd.network.bind", "0.0.0.0");
       if (config.hasProperty("tsd.network.bind")) {
         bindAddress = InetAddress.getByName(config.getString("tsd.network.bind"));
       }
 
       // we validated the network port config earlier
+        //tsd.network.port this attribute doesn't have default value,so you must set it in properties
       final InetSocketAddress addr = new InetSocketAddress(bindAddress,
           config.getInt("tsd.network.port"));
+
+
+      //Creates a new channel which is bound to the specified local address.
+        // This operation will block until the channel is bound.
       server.bind(addr);
       if (startup != null) {
         startup.setReady(tsdb);
@@ -271,7 +275,7 @@ final class TSDMain {
     }
 
     // The server is now running in separate threads, we can exit main.
-    System.out.println("main end"); // you can't read this output in stdout
+    CustomedMethod.printSuffix("main end"); // you can't read this output in stdout
   }
 
 
@@ -315,6 +319,8 @@ final class TSDMain {
   }
 
 
+
+  //我想知道什么时候回调用这个方法，故在这个方法内部打了断点
   private static void registerShutdownHook() {
     final class TSDBShutdown extends Thread {//TSDBShutdown是一个方法中的内部类，而且该类使用final修饰
       public TSDBShutdown() {

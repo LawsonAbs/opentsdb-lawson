@@ -21,7 +21,7 @@ import net.opentsdb.stats.StatsCollector;
 /**
  * The StartupPlugin allows users to interact with the OpenTSDB configuration
  * as soon as it is completely parsed, just before OpenTSDB begins to use it.
- * StartupPlugin运行用户和Opentsdb的配置交互，一旦完成解析，仅仅在openTSDB开始使用它之前。
+ * StartupPlugin允许用户在OpenTSDB配置被完全解析之后，即OpenTSDB开始使用它之前，与它进行交互。
  *
  * <p>
  * <b>Note:</b> Implementations must have a parameterless constructor. The

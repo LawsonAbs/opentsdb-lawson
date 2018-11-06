@@ -49,6 +49,8 @@ import com.stumbleupon.async.Deferred;
 /**
  * Timeseries Metadata is associated with a particular series of data points
  * and includes user configurable values and some stats calculated by OpenTSDB.
+ *
+ *
  * Whenever a new timeseries is recorded, an associated TSMeta object will
  * be stored with only the tsuid field configured. These meta objects may then
  * be used to determine what combinations of metrics and tags exist in the

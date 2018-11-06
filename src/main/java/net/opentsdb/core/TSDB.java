@@ -933,7 +933,7 @@ public final class TSDB {
       v = Bytes.fromLong(value);
     }
 
-    //为何将v.length-1 作为flags？
+    //为何将v.length-1 作为flags？ => 只是作为长度表达
     final short flags = (short) (v.length - 1);  // Just the length.
     return addPointInternal(metric, timestamp, v, tags, flags);
   }
@@ -1029,7 +1029,7 @@ public final class TSDB {
 
     IncomingDataPoints.checkMetricAndTags(metric, tags);
     final byte[] row = IncomingDataPoints.rowKeyTemplate(this, metric, tags);
-    final long base_time;//这个值是用来做啥的？？？
+    final long base_time;//这个值是用来做啥的？？？ => 这个base_time 应该就是后期在compact row key的时候用来检测是否old的标志
 
       //注意研究这里的qualifier的值
       final byte[] qualifier = Internal.buildQualifier(timestamp, flags);

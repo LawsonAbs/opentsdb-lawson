@@ -104,7 +104,10 @@ public final class RpcManager {
       "^/?" + PLUGIN_BASE_WEBPATH + "/?.*",
       Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
-  /** Reference to our singleton instance.  Set in {@link #initialize}. */
+  /** Reference to our singleton instance.  Set in {@link #initialize}.
+   * 到单例对象的应用。在initialize中设置
+   *
+   * */
   private static final AtomicReference<RpcManager> INSTANCE = Atomics.newReference();
 
   /** Commands we can serve on the simple, telnet-style RPC interface. */
@@ -125,6 +128,7 @@ public final class RpcManager {
 
   /**
    * Constructor used by singleton factory method.
+   * 用于单例工厂模式的构造器
    * @param tsdb the owning TSDB instance.
    */
   private RpcManager(final TSDB tsdb) {
@@ -134,11 +138,16 @@ public final class RpcManager {
   /**
    * Get or create the singleton instance of the manager, loading all the
    * plugins enabled in the given TSDB's {@link Config}.
+   * 获取或者创建一个RpcManager单例，在给出的TSDB的配置中，加载所有可用的plugins。
+   *
    * @return the shared instance of {@link RpcManager}. It's okay to
    * hold this reference once obtained.
+   * 一个共享的RpcManager实例。一旦获得这个引用，就可以保留它。
    */
   public static synchronized RpcManager instance(final TSDB tsdb) {
-    final RpcManager existing = INSTANCE.get();
+
+      //应该是下面这个地方体现了单例，会有一个判断去保证只有一个实例
+      final RpcManager existing = INSTANCE.get();
     if (existing != null) {
       return existing;
     }

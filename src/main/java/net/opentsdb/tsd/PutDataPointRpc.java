@@ -151,7 +151,7 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
       while(it.hasNext()){
           String key = (String)it.next();
           List<String> tempList = queryMap.get(key);
-          System.out.println("key = "+key+"value = ");
+          System.out.print("key = "+key+"value = ");
           for(String value : tempList){
               System.out.print(value+"...");
           }
@@ -174,7 +174,7 @@ final class PutDataPointRpc implements TelnetRpc, HttpRpc {
     for (final IncomingDataPoint dp : dps) {
         /** Handles passing a data point to the storage exception handler if
          *  we were unable to store it for any reason
-         *
+         * 处理将数据点传递给存储异常处理程序(如果我们因任何原因无法存储它)
          * */
       final class PutErrback implements Callback<Boolean, Exception> {
         public Boolean call(final Exception arg) {
