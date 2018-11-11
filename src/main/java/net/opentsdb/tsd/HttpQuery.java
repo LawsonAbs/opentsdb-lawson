@@ -170,10 +170,16 @@ final class HttpQuery extends AbstractHttpQuery {
   /**
    * Helper that strips the api and optional version from the URI array since
    * api calls only care about what comes after.
+   * 帮助方法：剥夺api以及可选的版本从uri数组中，因为api调用仅仅在乎接下来会发生什么
+   *
    * E.g. if the URI is "/api/v1/uid/assign" this method will return the
    * {"uid", "assign"}
+   * 如果URI是/api/v1/uid/assign  那么这个方法将会返回{"uid","assgin"}
+   *
    * @return An array with 1 or more components, note the first item may be
    * an empty string if given just "/api" or "/api/v1"
+   * 带有1或者更多组件的数组，注意第一条可能是空字符串，如果仅仅给出/api 或者 /api/v1这种形式
+   *
    * @throws BadRequestException if the URI is empty or does not start with a
    * slash
    * @throws NullPointerException if the URI is null

@@ -106,7 +106,10 @@ public final class TSDB {
   final byte[] uidtable;
   /** Name of the table where tree data is stored. */
   final byte[] treetable;
-  /** Name of the table where meta data is stored. */
+
+  /** Name of the table where meta data is stored.
+   * meta data被存储的表名
+   * */
   final byte[] meta_table;
 
   /** Unique IDs for the metric names.
@@ -158,7 +161,9 @@ public final class TSDB {
    * */
   private WriteableDataPointFilterPlugin ts_filter;
   
-  /** A filter plugin for allowing or blocking UIDs */
+  /** A filter plugin for allowing or blocking UIDs
+   * 一个用于允许/阻塞的过滤器插件
+   * */
   private UniqueIdFilterPlugin uid_filter;
   
   /** Writes rejected by the filter
@@ -229,6 +234,8 @@ public final class TSDB {
     table = config.getString("tsd.storage.hbase.data_table").getBytes(CHARSET);
     uidtable = config.getString("tsd.storage.hbase.uid_table").getBytes(CHARSET);
     treetable = config.getString("tsd.storage.hbase.tree_table").getBytes(CHARSET);
+
+    //获取meta_table的表名
     meta_table = config.getString("tsd.storage.hbase.meta_table").getBytes(CHARSET);
 
     //如下就是根据配置文件生成一个metrics(UniqueId类实例)
@@ -519,7 +526,8 @@ public final class TSDB {
   }
   
   /** 
-   * @return The UID filter object, may be null. 
+   * @return The UID filter object, may be null.
+   * UID 过滤器对象，可能为null.
    * @since 2.3 
    */
   public UniqueIdFilterPlugin getUidFilter() {
@@ -832,7 +840,9 @@ public final class TSDB {
         "kind=" + uid.kind());
   }
 
-  /** @return the width, in bytes, of metric UIDs */
+  /** @return the width, in bytes, of metric UIDs
+   * metric UIDs字节上的宽度
+   * */
   public static short metrics_width() {
     return METRICS_WIDTH;
   }
@@ -1372,26 +1382,45 @@ public final class TSDB {
 
   /**
    * Attempts to assign a UID to a name for the given type
+   * 尝试为给定的类型名分配一个UID
+   *
    * Used by the UniqueIdRpc call to generate IDs for new metrics, tagks or 
    * tagvs. The name must pass validation and if it's already assigned a UID,
    * this method will throw an error with the proper UID. Otherwise if it can
    * create the UID, it will be returned
+   * 被UniqueIdRpc调用，为新的metrics,tagks,tagvs生成一个新的IDs。name必须通过验证，
+   * 如果已经被分配一个UID，这个方法将会抛出一个异常同时和匹配的UID。否则如果它能创建UID，
+   * 它将被返回
+   *
    * @param type The type of uid to assign, metric, tagk or tagv
+   *             需要分配uid的类型：metric,tagk,tagv
    * @param name The name of the uid object
+   *             uid 对象的名字
    * @return A byte array with the UID if the assignment was successful
+   * 如果分配是成功的，则会返回UID的字节数组
    * @throws IllegalArgumentException if the name is invalid or it already 
    * exists
    * @since 2.0
    */
   public byte[] assignUid(final String type, final String name) {
-    Tags.validateString(type, name);
-    if (type.toLowerCase().equals("metric")) {
+    //先检测字符串是否符合标准
+      Tags.validateString(type, name);
+
+      //接着判断type的类型哪种？
+      if (type.toLowerCase().equals("metric")) {
       try {
-        final byte[] uid = this.metrics.getId(name);
+
+          final byte[] uid = this.metrics.getId(name);
+
+          //为什么这里直接抛出一个异常，而不是先判断一下字节数组uid？
+          //意思应该是：如果getId(name)没有抛出异常，则表明是已经分配了uid的name
+          //否则会抛出一个异常，这个异常的类型就是NoSuchUniqueName
+          //可以查看getId(name)方法抛出的异常的确就是NoSuchUniqueName
         throw new IllegalArgumentException("Name already exists with UID: " +
             UniqueId.uidToString(uid));
       } catch (NoSuchUniqueName nsue) {
-        return this.metrics.getOrCreateId(name);
+        //如果没有这个name对应的id，那么直接创建一个
+          return this.metrics.getOrCreateId(name);
       }
     } else if (type.toLowerCase().equals("tagk")) {
       try {
@@ -1501,7 +1530,9 @@ public final class TSDB {
     return this.treetable;
   }
   
-  /** @return the name of the meta table as a byte array for client requests */
+  /** @return the name of the meta table as a byte array for client requests
+   * 返回客户端请求的meta table名，返回结果是字节数组
+   * */
   public byte[] metaTable() {
     return this.meta_table;
   }

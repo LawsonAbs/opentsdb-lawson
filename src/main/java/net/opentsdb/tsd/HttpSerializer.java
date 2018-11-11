@@ -193,8 +193,14 @@ public abstract class HttpSerializer {
   
   /**
    * Parses a list of metrics, tagk and/or tagvs to assign UIDs to
+   * 解析一系列的metrics，tagk，以及tagvs 去分配UIDs
+   *
    * @return as hash map of lists for the different types
+   * 返回一个hash map 不同类型的lists
    * @throws BadRequestException if the plugin has not implemented this method
+   *
+   * 01.HashMap 的key 是String类型，value 是一个List<String>
+   *
    */
   public HashMap<String, List<String>> parseUidAssignV1() {
     throw new BadRequestException(HttpResponseStatus.NOT_IMPLEMENTED, 

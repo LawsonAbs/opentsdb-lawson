@@ -546,6 +546,8 @@ public class Config {
     //默认是tsdb-uid 存储UID的信息
     default_map.put("tsd.storage.hbase.uid_table", "tsdb-uid");
     default_map.put("tsd.storage.hbase.tree_table", "tsdb-tree");
+
+    //这个tsdb-meta 会在TSMeta类 中的tsdb.metaTable()获取
     default_map.put("tsd.storage.hbase.meta_table", "tsdb-meta");
     //default_map.put("tsd.storage.hbase.zk_quorum", "localhost");
     default_map.put("tsd.storage.hbase.zk_quorum", "192.168.211.4");
@@ -559,6 +561,8 @@ public class Config {
     default_map.put("tsd.storage.compaction.max_concurrent_flushes", "10000");
     default_map.put("tsd.storage.compaction.flush_speed", "2");
     default_map.put("tsd.timeseriesfilter.enable", "false");
+
+    //默认是关闭uidfilter
     default_map.put("tsd.uidfilter.enable", "false");
     default_map.put("tsd.core.stats_with_port", "false");    
     default_map.put("tsd.http.show_stack_trace", "true");

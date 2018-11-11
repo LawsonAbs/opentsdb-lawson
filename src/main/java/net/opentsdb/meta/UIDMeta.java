@@ -58,12 +58,12 @@ import net.opentsdb.utils.JSONException;
  * The {@code name}, {@code uid}, {@code type} and {@code created} fields can 
  * only be modified by the system and are usually done so on object creation.
  * <p>
- *     用户可以修改的字段如下：
- *     display_name
- *     description
- *     notes
- *     custom
- *     name,uid,type,以及创建的字段仅能被系统修改，这个步骤经常是在对象创建时完成的。 *
+    用户可以修改的字段如下：
+     display_name
+*     description
+*     notes
+*    custom
+*   name,uid,type,以及创建的字段仅能被系统修改，这个步骤经常是在对象创建时完成的。 *
  *
  *
  * When you call {@link #syncToStorage} on this object, it will verify that the
@@ -74,7 +74,7 @@ import net.opentsdb.utils.JSONException;
  * all of the other fields in storage. Hence the need for the {@code changed} 
  * hash map and the {@link #syncMeta} method.
  *
- * 当你调用这个对象的syncTostorage方法时，它将会验证这个元数据所对应的UID对象已经存在。
+ * 当你调用这个对象的syncTostorage方法时，它将会验证这个元数据所对应的UID对象是否仍然存在。
  * 然后它将会寻找存在的元数据并且加载修改，如果有指定的话，会覆写用户字段（通过一个put命令）。
  * 如果覆写未被调用（例如，一个post被调用）。那么仅仅被用户提供的字段的将会被存储，保留所有
  * 其它的字段。因为变化的hash map（这个changed hash map后面需要使用到）以及syncMeta方法需要。
@@ -103,7 +103,6 @@ public final class UIDMeta {
    * 这个类使用的唯一列族
    * */
   private static final byte[] FAMILY = "name".getBytes(CHARSET);
-
 
 
 
@@ -160,8 +159,11 @@ public final class UIDMeta {
   /**
    * Constructor used for overwriting. Will not reset the name or created values
    * in storage.
+   * 用于覆写的构造器。 不会重置存储中的name或是创建的值
    * @param type Type of UID object
    * @param uid UID of the object
+   *
+   * 01.UniqueIdType 是一UniqueId的类型，这是一个enum对象，目前有三种：    METRIC,  TAGK,  TAGV
    */
   public UIDMeta(final UniqueIdType type, final String uid) {
     this.type = type;
@@ -171,18 +173,20 @@ public final class UIDMeta {
   
   /**
    * Constructor used by TSD only to create a new UID with the given data and 
-   * the current system time for {@code createdd}
-   * @param type Type of UID object
-   * @param uid UID of the object
-   * @param name Name of the UID
+   * the current system time for {@code created}
+   * 使用给定的数据已经目前创建的系统时间，被TSD用于创建一个新的UID的构造器
+   *
+   * @param type Type of UID object  UID对象的Type
+   * @param uid UID of the object   对象的uid
+   * @param name Name of the UID    UID的name
    */
   public UIDMeta(final UniqueIdType type, final byte[] uid, final String name) {
     this.type = type;
     this.uid = UniqueId.uidToString(uid);
     this.name = name;
-    created = System.currentTimeMillis() / 1000;
+    created = System.currentTimeMillis() / 1000;  //=> current system time for created
     initializeChangedMap();
-    changed.put("created", true);
+    changed.put("created", true);  // 将created 置为true
   }
   
   /** @return a string with details about this object

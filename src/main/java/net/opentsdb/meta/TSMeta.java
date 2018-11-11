@@ -49,12 +49,15 @@ import com.stumbleupon.async.Deferred;
 /**
  * Timeseries Metadata is associated with a particular series of data points
  * and includes user configurable values and some stats calculated by OpenTSDB.
- *
+ * 时间序列的 Metadata 是和指定的系列数据点相关联，同时可包含用户可配置的值，并且一些由OpenTSDB计算的统计值
  *
  * Whenever a new timeseries is recorded, an associated TSMeta object will
  * be stored with only the tsuid field configured. These meta objects may then
  * be used to determine what combinations of metrics and tags exist in the
  * system.
+ * 每当记录一个新的索引时，一个相关联的TSMeta对象将只存储配置了tsuid字段的对象。这些meta 对象
+ * 可能被用于决定什么样的metrics以及tags的结合会存在系统中
+ *
  * <p>
  * When you call {@link #syncToStorage} on this object, it will verify that the
  * associated UID objects this meta data is linked with still exist. Then it 
@@ -64,9 +67,19 @@ import com.stumbleupon.async.Deferred;
  * preserving all of the other fields in storage. Hence the need for the 
  * {@code changed} hash map and the {@link #syncMeta} method. 
  * <p>
- * The metric and tag UIDMeta objects may be loaded from their respective 
+ * 当你调用这个对象上的syncToStorage()方法时，它将验证这个meta data相关的UID对象是否仍然存在。
+ * 然后它将捕获这个存在的数据，并且复制改变，覆写用户字段如果是指定的话。（例如：通过一个PUt命令）。
+ * 如果覆写没有被调用（例如，发起一个Post），那么仅仅用户提供的字段将会被报存，保留存储中所有的其它字段。
+ * 因为changed hash map 和 syncMeta()方法的需求。
+ * changed:是下面的一个属性字段
+ * syncMeta():是一个方法
+ *
+ *
+ * The metric and tag UIDMeta objects may be loaded from their respective
  * locations in the data storage system if requested. Note that this will cause
  * at least 3 extra storage calls when loading.
+ * metric以及tag UIDMeta对象可能被加载从他们的相对的位置在数据存储系统中，如果被请求的话。
+ * 注意这个加载将造成至少3个额外的存储调用
  * @since 2.0
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -78,16 +91,30 @@ public final class TSMeta {
   /** Charset used to convert Strings to byte arrays and back. */
   private static final Charset CHARSET = Charset.forName("ISO-8859-1");
   
-  /** The single column family used by this class. */
+  /** The single column family used by this class.
+   * 这个类使用的单个列族
+   *
+   * */
   public static final byte[] FAMILY = "name".getBytes(CHARSET);
   
   /** The cell qualifier to use for timeseries meta */
   private static final byte[] META_QUALIFIER = "ts_meta".getBytes(CHARSET);
   
-  /** The cell qualifier to use for timeseries meta */
+  /** The cell qualifier to use for timeseries meta
+   *  针对timeseries meta使用的单元qualifier
+   *
+   *  01.我在自己的opentsdb的服务器上的确可以看到这个值如下：
+   *  ROW                                     COLUMN+CELL
+   *  \x00\x00\x04\x00\x00\x03\x00\x00\x08    column=name:ts_ctr, timestamp=1541495562451, value=\x00\x00\x00\x00\x00\x00\x02\xAA
+   *  这里为什么有一个ts_ctr？  => 这个就是COUNTER QUALIFIER
+   * */
   private static final byte[] COUNTER_QUALIFIER = "ts_ctr".getBytes(CHARSET);
   
-  /** Hexadecimal representation of the TSUID this metadata is associated with */
+  /** Hexadecimal representation of the TSUID this metadata is associated with
+   * 这个metadata相关联的TSUID 的十六进制表示
+   *
+   * 01.默认是""
+   * */
   private String tsuid = "";
   
   /** The metric associated with this timeseries */
@@ -108,7 +135,9 @@ public final class TSMeta {
   /** A timestamp of when this timeseries was first recorded in seconds */
   private long created = 0;
   
-  /** Optional user supplied key/values */
+  /** Optional user supplied key/values
+   * 可选的 user 提供的key/values
+   * */
   private HashMap<String, String> custom = null;
   
   /** An optional field recording the units of data in this timeseries */
@@ -132,13 +161,19 @@ public final class TSMeta {
    */
   private double min = Double.NaN; 
   
-  /** The last time this data was recorded in seconds */
+  /** The last time this data was recorded in seconds
+   * 这个数据点被记录的最后时间【秒级别】
+   * */
   private long last_received = 0;
   
-  /** The total number of data points recorded since meta has been enabled */
+  /** The total number of data points recorded since meta has been enabled
+   * 自从meta被开启之后，被记录的数据点总数
+   * */
   private long total_dps;
 
-  /** Tracks fields that have changed by the user to avoid overwrites */
+  /** Tracks fields that have changed by the user to avoid overwrites
+   *  为了避免覆写而跟踪已经被用户修改的字段
+   * */
   private final HashMap<String, Boolean> changed = 
     new HashMap<String, Boolean>();
 
@@ -151,7 +186,10 @@ public final class TSMeta {
   
   /**
    * Constructor for RPC timeseries parsing that will not set the timestamps
+   * 针对RPC timeseries 的构造器，这个构造器不会设置timestamps
+   *
    * @param tsuid The UID of the timeseries
+   *              timeseries 的UID
    */
   public TSMeta(final String tsuid) {
     this.tsuid = tsuid;
@@ -281,6 +319,8 @@ public final class TSMeta {
     /**
      * Callback executed after all of the UID mappings have been verified. This
      * will then proceed with the CAS call.
+     * 在所有的UID映射被验证之后执行调用函数。这个将继续CAS调用
+     *
      */
     final class ValidateCB implements Callback<Deferred<Boolean>, 
       ArrayList<Object>> {
@@ -293,11 +333,14 @@ public final class TSMeta {
       /**
        * Nested class that executes the CAS after retrieving existing TSMeta
        * from storage.
+       * 执行CAS的内部类，在检索存储中存在的TSMeta
+       *
        */
       final class StoreCB implements Callback<Deferred<Boolean>, TSMeta> {
-
         /**
          * Executes the CAS if the TSMeta was successfully retrieved
+         * 如果TSMeta被成功检索到了，则执行CAS
+         *
          * @return True if the CAS was successful, false if the stored data
          * was modified in flight
          * @throws IllegalArgumentException if the TSMeta did not exist in
@@ -308,7 +351,8 @@ public final class TSMeta {
           if (stored_meta == null) {
             throw new IllegalArgumentException("Requested TSMeta did not exist");
           }
-          
+
+          //获取stored_meta的json对象
           final byte[] original_meta = stored_meta.getStorageJSON();
           local_meta.syncMeta(stored_meta, overwrite);
 
@@ -318,7 +362,6 @@ public final class TSMeta {
 
           return tsdb.getClient().compareAndSet(put, original_meta);
         }
-        
       }
       
       /**
@@ -341,11 +384,18 @@ public final class TSMeta {
   
   /**
    * Attempts to store a new, blank timeseries meta object
+   * 尝试存储一个新的，空的timeseries meta 对象
+   *
    * <b>Note:</b> This should not be called by user accessible methods as it will 
    * overwrite any data already in the column.
+   * 这个应该被用户可用的方法调用，因为它将覆写任何已经在列中的数据
+   *
    * <b>Note:</b> This call does not guarantee that the UIDs exist before
    * storing as it should only be called *after* a data point has been recorded
-   * or during a meta sync. 
+   * or during a meta sync.
+   * 这个调用不能保证在存储之前，UID已经存在，因为它仅仅应该在一个数据点被记录或者在一个meta sync之后被调用。
+   *
+   *
    * @param tsdb The TSDB to use for storage access
    * @return True if the TSMeta created(or updated) successfully
    * @throws HBaseException if there was an issue fetching
@@ -373,13 +423,19 @@ public final class TSMeta {
   /**
    * Attempts to fetch the timeseries meta data and associated UIDMeta objects
    * from storage.
+   * 尝试从存储中获取timeseries 元数据以及与UIDMeta对象。
+   *
    * <b>Note:</b> Until we have a caching layer implemented, this will make at
    * least 4 reads to the storage system, 1 for the TSUID meta, 1 for the 
    * metric UIDMeta and 1 each for every tagk/tagv UIDMeta object.
+   * 注意：除非我们有一个缓冲层的实现，否则这个操作将会至少4次读存储系统，分别是TSUID meta，metric UIDMeta
+   * 以及tagk 和 tagv UIDMeta 对象。
+   *
    * <p>
    * See {@link #getFromStorage(TSDB, byte[])} for details.
    * @param tsdb The TSDB to use for storage access
    * @param tsuid The UID of the meta to fetch
+   *              需要获取的meta UID
    * @return A TSMeta object if found, null if not
    * @throws HBaseException if there was an issue fetching
    * @throws IllegalArgumentException if parsing failed
@@ -684,7 +740,11 @@ public final class TSMeta {
   /**
    * Attempts to fetch the timeseries meta data from storage. 
    * This method will fetch the {@code counter} and {@code meta} columns.
+   * 这个方法将会获取counter列以及meta列
+   *
    * <b>Note:</b> This method will not load the UIDMeta objects.
+   * 这个方法不会加载UIDMeta对象
+   *
    * @param tsdb The TSDB to use for storage access
    * @param tsuid The UID of the meta to fetch
    * @return A TSMeta object if found, null if not
@@ -697,12 +757,16 @@ public final class TSMeta {
     
     /**
      * Called after executing the GetRequest to parse the meta data.
+     * 执行GetRequest去解析meta data之后调用
      */
     final class GetCB implements Callback<Deferred<TSMeta>, ArrayList<KeyValue>> {
 
       /**
        * @return Null if the meta did not exist or a valid TSMeta object if it
-       * did.
+       * did.[???valid -> invalid]
+       *
+       * 01.ArrayList<KeyValue>如下的参数row应该是行键么？ -> 从起定义来看，显然不是。它是一个KeyValue类型
+       * KeyValue:是一个Hbase表中的Cell
        */
       @Override
       public Deferred<TSMeta> call(final ArrayList<KeyValue> row) throws Exception {
@@ -710,19 +774,28 @@ public final class TSMeta {
           return Deferred.fromResult(null);
         }
         
-        long dps = 0;
-        long last_received = 0;
+        long dps = 0;//定义dps
+        long last_received = 0;//定义最后接收的时间
         TSMeta meta = null;
-        
+
+        //KeyValue 其实是老的api
         for (KeyValue column : row) {
+            //显示判断是否
           if (Arrays.equals(COUNTER_QUALIFIER, column.qualifier())) {
             dps = Bytes.getLong(column.value());
             last_received = column.timestamp() / 1000;
           } else if (Arrays.equals(META_QUALIFIER, column.qualifier())) {
-            meta = JSON.parseToObject(column.value(), TSMeta.class);
+
+              //这个meta是一个json对象，所以需要使用parseToObject()进行转换
+              //原对象是column.value()，目标对象是TSMeta.class
+              //parseToObject: Deserializes a JSON formatted byte array to a specific class type
+              meta = JSON.parseToObject(column.value(), TSMeta.class);
           }
         }
-        
+
+        /*
+        01.我现在的机器上的问题就是只有ts_ctr列，而没有ts_meta列？这是什么原因呢？ => 原因是opentsdb.conf里的配置不对
+         */
         if (meta == null) {
           LOG.warn("Found a counter TSMeta column without a meta for TSUID: " + 
               UniqueId.uidToString(row.get(0).key()));
@@ -733,12 +806,23 @@ public final class TSMeta {
         meta.last_received = last_received;
         return Deferred.fromResult(meta);
       }
-      
+      /*
+      01.像这种从hbase中读取数据的情况都使用了Deferred，否则会很缓慢？这么做的目的是为了异步加快访问速度么？
+       */
     }
-    
+
+    //GetRequest: Reads something from HBase
+      //这个tsdb.metaTable 就是 "tsdb-meta"
     final GetRequest get = new GetRequest(tsdb.metaTable(), tsuid);
+
+    //family: Specifies a particular column family to get.
     get.family(FAMILY);
+
+    //qualifiers:Specifies a particular set of column qualifiers to get.
+      //获取的值是：ts_ctr,ts_meta
     get.qualifiers(new byte[][] { COUNTER_QUALIFIER, META_QUALIFIER });
+
+    //可以发现这里再次使用了addCallbackDeferring(new GetCB())方法
     return tsdb.getClient().get(get).addCallbackDeferring(new GetCB());
   }
   
@@ -760,8 +844,12 @@ public final class TSMeta {
   /**
    * Syncs the local object with the stored object for atomic writes, 
    * overwriting the stored data if the user issued a PUT request
+   * 为了实现原子写入，同步的本地对象可存储对象 。如果用户发起一个PUT请求，则覆写已经存储的数据
+   *
    * <b>Note:</b> This method also resets the {@code changed} map to false
    * for every field
+   * 这个方法同样重置changed（是一个map）中的每一个字段到false
+   *
    * @param meta The stored object to sync from
    * @param overwrite Whether or not all user mutable data in storage should be
    * replaced by the local object
@@ -817,6 +905,7 @@ public final class TSMeta {
   
   /**
    * Sets or resets the changed map flags
+   * 设置或者重置changed map flags
    */
   private void initializeChangedMap() {
     // set changed flags
@@ -840,14 +929,29 @@ public final class TSMeta {
    * save space. It also serializes in order so that we can make a proper CAS
    * call. Otherwise the POJO serializer may place the fields in any order
    * and CAS calls would fail all the time.
+   * 用于写入存储的格式化成JSON输出。它删除我们不需要的对象，或是想存储的额对象（诸如UIDMeta对象或者
+   * 所有的dps）到存储空间中。它同样被序列化为了我们能够做一个CAS调用。
+   * 否则POJO序列化其可能以随意的顺序放置字段，同时CAS调用将会一直失败
+   *
    * @return A byte array to write to storage
+   *        返回一个用于写到存储中的字节数组
    */
   private byte[] getStorageJSON() {
     // 256 bytes is a good starting value, assumes default info
+      //ByteArrayOutputStream: Creates a new byte array output stream, with a buffer capacity of the specified size, in bytes.
+      //创建一个新的字节数组输出流，带有一个指定的字节大小的缓冲空间（256）
     final ByteArrayOutputStream output = new ByteArrayOutputStream(256);
     try {
+        //01.getFactory():Returns a reference to the JsonFactory for streaming creation
+        //返回一个JsonFactory的一个引用用于流创建
+
+        //02.Convenience method for constructing generator that uses default encoding of the format
+        // (UTF-8 for JSON and most other data formats).
+        //用于构建构造器的方便方法，这个构造器使用默认的格式化编码（针对JSON以及大多数数据格式的UTF-8编码）
       final JsonGenerator json = JSON.getFactory().createGenerator(output); 
-      json.writeStartObject();
+      json.writeStartObject();//写json对象的开始符"{"，其中可能包含空格
+
+        //将各个字段域写入到json对象中
       json.writeStringField("tsuid", tsuid);
       json.writeStringField("displayName", display_name);
       json.writeStringField("description", description);
@@ -870,6 +974,8 @@ public final class TSMeta {
       
       json.writeEndObject(); 
       json.close();
+
+      //为什么将最后的字节数组输出流  还要再转为Byte Array?不是有重复操作了么？
       return output.toByteArray();
     } catch (IOException e) {
       throw new RuntimeException("Unable to serialize TSMeta", e);
@@ -991,7 +1097,9 @@ public final class TSMeta {
   
   // Getters and Setters --------------
   
-  /** @return the TSUID as a hex encoded string */
+  /** @return the TSUID as a hex encoded string
+   * TSUID: 一个十六进制编码的字符串
+   * */
   public final String getTSUID() {
     return tsuid;
   }

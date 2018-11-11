@@ -29,6 +29,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Handles searching from the command line. Enables lookups of time series
  * information given a metric, tagk, tagv or combination thereof
+ * 处理来自命令行的搜索。
+ * 开启时间序列信息的查找，给出一个metric，tagk，tagv或者是一个其中的一个结合
+ *
  */
 final class Search {
   private static final Logger LOG = LoggerFactory.getLogger(Search.class);
@@ -47,6 +50,8 @@ final class Search {
   
   /**
    * Entry point to run the search utility
+   * 运行搜索实用程序的入口点
+   *
    * @param args Command line arguments
    * @throws Exception If something goes wrong
    */
@@ -88,11 +93,16 @@ final class Search {
   /**
    * Determines the command requested of the user can calls the appropriate
    * method.
+   * 决定用户请求的方法可以调用适当的方法
+   *
    * @param tsdb The TSDB to use for communication
    * @param use_data_table Whether or not lookups should be done on the full
    * data table
+   *                       是否应该在完整数据表上执行查询
+   *
    * @param args Arguments to parse
-   * @return An exit code
+   *             解析的参数
+   * @return An exit code   退出码
    */
   private static int runCommand(final TSDB tsdb,
                                 final boolean use_data_table,

@@ -105,7 +105,9 @@ public final class UniqueId implements UniqueIdInterface {
   //这个值在构造函数中被赋值
   private final short id_width;
 
-  /** Whether or not to randomize new IDs */
+  /** Whether or not to randomize new IDs
+   *  是否是随机生成一个新的IDs
+   * */
   private final boolean randomize_id;
 
   /** Cache for forward mappings (name to ID). */
@@ -449,15 +451,23 @@ public final class UniqueId implements UniqueIdInterface {
 
   /**
    * Implements the process to allocate a new UID.
+   * 实现分配一个新的UID的过程
+   *
    * This callback is re-used multiple times in a four step process:
    *   1. Allocate a new UID via atomic increment.
    *   2. Create the reverse mapping (ID to name).
    *   3. Create the forward mapping (name to ID).
    *   4. Return the new UID to the caller.
+   * 这个过程会被多次重复使用在如下四个步骤中：
+   *  01.通过原子增加的方式，分配一个新的UID
+   *  02.创建一个逆映射（ID -> name）
+   *  03.创建一个顺映射（name -> ID）
+   *  04.给调用者返回一个新的UID
+   *
    */
   private final class UniqueIdAllocator implements Callback<Object, Object> {
-    private final String name;  // What we're trying to allocate an ID for.
-    private final Deferred<byte[]> assignment; // deferred to call back
+    private final String name;  // What we're trying to allocate an ID for. -> 我们需要为哪个name分配一个ID
+    private final Deferred<byte[]> assignment; // deferred to call back -> 需要回调的deferred
     private short attempt = randomize_id ?     // Give up when zero.
         MAX_ATTEMPTS_ASSIGN_RANDOM_ID : MAX_ATTEMPTS_ASSIGN_ID;
 
@@ -467,7 +477,7 @@ public final class UniqueId implements UniqueIdInterface {
     // This can be cleaned up a fair amount but it may require changing the 
     // public behavior a bit. For now, the flag will prevent multiple attempts
     // to execute the callback.
-    private boolean called = false; // whether we called the deferred or not
+    private boolean called = false; // whether we called the deferred or not  -> 我们是否调用了deferred？
 
     private long id = -1;  // The ID we'll grab with an atomic increment.
     private byte row[];    // The same ID, as a byte array.
@@ -476,7 +486,10 @@ public final class UniqueId implements UniqueIdInterface {
     private static final byte CREATE_REVERSE_MAPPING = 1;
     private static final byte CREATE_FORWARD_MAPPING = 2;
     private static final byte DONE = 3;
+
+    //state表示的是当前这个线程需要执行的操作是什么。在这里就是分配UID
     private byte state = ALLOCATE_UID;  // Current state of the process.
+
 
     UniqueIdAllocator(final String name, final Deferred<byte[]> assignment) {
       this.name = name;
@@ -554,17 +567,21 @@ public final class UniqueId implements UniqueIdInterface {
 
     /** Generates either a random or a serial ID. If random, we need to
      * make sure that there isn't a UID collision.
+     * 产生一个随机的或者是有序的ID。如果是随机的，我们需要确保没有一个UID会发生碰撞
      */
     private Deferred<Long> allocateUid() {
       LOG.info("Creating " + (randomize_id ? "a random " : "an ") + 
           "ID for kind='" + kind() + "' name='" + name + '\'');
 
+      //这种修改state是为了什么？
       state = CREATE_REVERSE_MAPPING;
-      if (randomize_id) {
+      if (randomize_id) {//如果是随机生成一个UID
         return Deferred.fromResult(RandomUniqueId.getRandomUID());
-      } else {
-        return client.atomicIncrement(new AtomicIncrementRequest(table, 
-                                      MAXID_ROW, ID_FAMILY, kind));
+      } else {//否则生成一个自增值
+          //atomicIncrement: Atomically and durably increments a value in HBase.
+          //在Hbase中，原子增加并且持久化的增加一个值
+          //直接发起一个rpc过程，往hbase表中写入数据
+        return client.atomicIncrement(new AtomicIncrementRequest(table,MAXID_ROW, ID_FAMILY, kind));
       }
     }
 
@@ -736,6 +753,9 @@ public final class UniqueId implements UniqueIdInterface {
         //异步调用，这里是先寻找name所对应的id是否存在，如果不存在的话，就需要分配一个id
       return getIdAsync(name).joinUninterruptibly();
     } catch (NoSuchUniqueName e) {
+
+
+        //默认情况下，这个uidFilter是关闭的。所以下面这个操作是不会被执行的
       if (tsdb != null && tsdb.getUidFilter() != null && tsdb.getUidFilter().fillterUIDAssignments()) {
         try {
           if (!tsdb.getUidFilter()
@@ -757,6 +777,8 @@ public final class UniqueId implements UniqueIdInterface {
       
       Deferred<byte[]> assignment = null; //是一个Deferred对象
       boolean pending = false;
+
+      //进行同步操作，对pending_assignments这个对象
       synchronized (pending_assignments) {
         assignment = pending_assignments.get(name);
         if (assignment == null) {
@@ -774,7 +796,7 @@ public final class UniqueId implements UniqueIdInterface {
         }
       }
 
-      if (pending) {
+      if (pending) {//接下来就等待分配UID了
         LOG.info("Already waiting for UID assignment: " + name);
         try {
           return assignment.joinUninterruptibly();
@@ -784,6 +806,7 @@ public final class UniqueId implements UniqueIdInterface {
       }
       
       // start the assignment dance after stashing the deferred =>//stash:存放
+        //在存放了deferred对象自后，开始分配的工作
       byte[] uid = null;
       try {
         uid = new UniqueIdAllocator(name, assignment).tryAllocate().joinUninterruptibly();

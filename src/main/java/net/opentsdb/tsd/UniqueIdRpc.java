@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import net.opentsdb.utils.CustomedMethod;
 import org.hbase.async.Bytes;
 import org.hbase.async.Bytes.ByteMap;
 import org.hbase.async.PutRequest;
@@ -43,6 +44,8 @@ import net.opentsdb.uid.UniqueId.UniqueIdType;
 /**
  * Handles calls for UID processing including getting UID status, assigning UIDs
  * and other functions.
+ * 处理UID调用，包括获取UID状态，分配UIDs，以及其它的功能
+ *
  * @since 2.0
  */
 final class UniqueIdRpc implements HttpRpc {
@@ -52,8 +55,13 @@ final class UniqueIdRpc implements HttpRpc {
     
     // the uri will be /api/vX/uid/? or /api/uid/?
     final String[] uri = query.explodeAPIPath();
-    final String endpoint = uri.length > 1 ? uri[1] : ""; 
+    CustomedMethod.printSuffix(uri.toString());
 
+    //endpoint 的最佳翻译
+      //如果uri的长度大于1 ，那么使用uri[1]，否则使用""
+    final String endpoint = uri.length > 1 ? uri[1] : "";
+
+    //接着就比较这个endpoint 的值
     if (endpoint.toLowerCase().equals("assign")) {
       this.handleAssign(tsdb, query);
       return;
@@ -74,17 +82,28 @@ final class UniqueIdRpc implements HttpRpc {
 
   /**
    * Assigns UIDs to the given metric, tagk or tagv names if applicable
+   * 如果可用的话，分配UIDs 为给定的metric，tagk，tagv names。
+   *
    * <p>
    * This handler supports GET and POST whereby the GET command can
    * parse query strings with the {@code type} as their parameter and a comma
    * separated list of values to assign UIDs to.
+   * 这个handler支持GET以及POST，凭借GET命令能够解析查询字符串使用类型作为他们的参数
+   * 并且根据值的一个逗号分隔列表分配UIDs。
+   *
    * <p>
    * Multiple types and names can be provided in one call. Each name will be
    * processed independently and if there's an error (such as an invalid name or
    * it is already assigned) the error will be stored in a separate error map
    * and other UIDs will be processed.
+   * 多种类型已经名字能够被提供在一次调用。每个name将会单独被处理，并且如果有错误的话，（诸如
+   * 一个无效的name或者该name已经被分配），这个Error将会被存储在一个隔离的Error map，并且其它的UIDs
+   * 将会被处理
+   *
    * @param tsdb The TSDB from the RPC router
+   *             来自RPC router 的TSDB对象
    * @param query The query for this request
+   *              来自这个请求的查询
    */
   private void handleAssign(final TSDB tsdb, final HttpQuery query) {
     // only accept GET And POST
@@ -93,19 +112,28 @@ final class UniqueIdRpc implements HttpRpc {
           "Method not allowed", "The HTTP method [" + query.method().getName() +
           "] is not permitted for this endpoint");
     }
-    
+
+
+    //这个在很多地方都是一样的
     final HashMap<String, List<String>> source;
     if (query.method() == HttpMethod.POST) {
-      source = query.serializer().parseUidAssignV1();
+        //为此source 赋值
+        source = query.serializer().parseUidAssignV1();
     } else {
       source = new HashMap<String, List<String>>(3);
       // cut down on some repetitive code, split the query string values by
       // comma and add them to the source hash
-      String[] types = {"metric", "tagk", "tagv"};
+        //减少一些重复的代码，通过逗号分割字符串值，并且将这些值添加到source hash中
+      String[] types = {"metric", "tagk", "tagv"};//type 包含的类型有metric ,tagk ,tagv
+        CustomedMethod.printSuffix(types.length+"");
+
+        //types.length 表示的String数组types的实际容量
       for (int i = 0; i < types.length; i++) {
+          //types[0] = metric , types[1] = tagk, types[2] = tagv
         final String values = query.getQueryStringParam(types[i]);
         if (values != null && !values.isEmpty()) {
-          final String[] metrics = values.split(",");
+            //这里使用metric命名欠妥，因为得到的数组值不一定仅仅是metric，也有可能是tagk,tagv等
+            final String[] metrics = values.split(",");
           if (metrics != null && metrics.length > 0) {
             source.put(types[i], Arrays.asList(metrics));
           }
@@ -116,11 +144,15 @@ final class UniqueIdRpc implements HttpRpc {
     if (source.size() < 1) {
       throw new BadRequestException("Missing values to assign UIDs");
     }
-    
+
+    //这里又来一个map?
     final Map<String, TreeMap<String, String>> response = 
       new HashMap<String, TreeMap<String, String>>();
-    
+
+
     int error_count = 0;
+    //HashMap<String, List<String>> source
+      //对这个操作有点儿不解
     for (Map.Entry<String, List<String>> entry : source.entrySet()) {
       final TreeMap<String, String> results = 
         new TreeMap<String, String>();
@@ -129,6 +161,7 @@ final class UniqueIdRpc implements HttpRpc {
       
       for (String name : entry.getValue()) {
         try {
+            //assignUid -> Attempts to assign a UID to a name for the given type
           final byte[] uid = tsdb.assignUid(entry.getKey(), name);
           results.put(name, 
               UniqueId.uidToString(uid));
@@ -137,8 +170,12 @@ final class UniqueIdRpc implements HttpRpc {
           error_count++;
         }
       }
-      
-      response.put(entry.getKey(), results);
+
+      //得到的结果应该类似如下的样子：
+        // metric TreeMap<String,String>
+        // tagk TreeMap<String,String>
+        // tagv TreeMap<String,String>
+      response.put(entry.getKey(),results);
       if (errors.size() > 0) {
         response.put(entry.getKey() + "_errors", errors);
       }
@@ -253,11 +290,21 @@ final class UniqueIdRpc implements HttpRpc {
   
   /**
    * Handles CRUD calls to individual TSMeta data entries
+   * 处理对于单个TSMeta 数据条目的CRUD调用  => 这个大多数是通过HTTP请求
+   *
    * @param tsdb The TSDB from the RPC router
+   *             来自这个RPCrouter中的TSDB
    * @param query The query for this request
+   *              这个请求中的查询
+   *
+   * 01.首先需要判断是GET，还是POST方法
+   * 02.然后从查询字符串中解析出tsuid的值
+
+
+
+
    */
   private void handleTSMeta(final TSDB tsdb, final HttpQuery query) {
-
     final HttpMethod method = query.getAPIMethod();
     // GET
     if (method == HttpMethod.GET) {
@@ -318,12 +365,16 @@ final class UniqueIdRpc implements HttpRpc {
       if (query.hasContent()) {
         meta = query.serializer().parseTSMetaV1();
       } else {
+
+          //注意观察，因为使用了PUT方法，所以通过query获取一个meta对象，
+          //然后再将这个meta对象刷写到hbase中
         meta = this.parseTSMetaQS(query);
       }
       
       /**
        * Storage callback used to determine if the storage call was successful
        * or not. Also returns the updated object from storage.
+       * 存储回调用户确定存储调用是否成功。同时返回更新后的存储中的值
        */
       class SyncCB implements Callback<Deferred<TSMeta>, Boolean> {
 
@@ -547,20 +598,35 @@ final class UniqueIdRpc implements HttpRpc {
 
   /**
    * Used with verb overrides to parse out values from a query string
+   * 同谓词覆盖一起使用，为了从查询字符串中解析值
+   *
    * @param query The query to parse
+   *              需要解析的查询
    * @return An TSMeta object with configured values
+   *        一个TSMeta对象带有配置值
    * @throws BadRequestException if a required value was missing or could not
    * be parsed
+   *
+   * 01.parseTSMetaQS()的QS是什么意思？
    */
   private TSMeta parseTSMetaQS(final HttpQuery query) {
-    final String tsuid = query.getQueryStringParam("tsuid");
-    final TSMeta meta;
+
+      //获取tsuid值
+      final String tsuid = query.getQueryStringParam("tsuid");
+      CustomedMethod.printSuffix(tsuid);
+
+      //定义一个TSMeta引用
+      final TSMeta meta;
+
+    //调用TSMeta 构造函数
+      //如果tsuid 不为null且不为空
     if (tsuid != null && !tsuid.isEmpty()) {
       meta = new TSMeta(tsuid);
     } else {
       meta = new TSMeta();
     }
-    
+
+    //分别获取display_name,description,notes,units,data_type,retention 等的值
     final String display_name = query.getQueryStringParam("display_name");
     if (display_name != null) {
       meta.setDisplayName(display_name);
@@ -619,7 +685,10 @@ final class UniqueIdRpc implements HttpRpc {
   /**
    * Parses a query string "m=metric{tagk1=tagv1,...}" type query and returns
    * a tsuid.
+   * 解析一个查询字符串"m=metric{tagk1=tagv1,····}"类型的查询并且返回一个tsuid
+   *
    * @param data_query The query we're building
+   *                   我们正在构建的查询。
    * @throws BadRequestException if we are unable to parse the query or it is
    * missing components
    * @todo - make this asynchronous

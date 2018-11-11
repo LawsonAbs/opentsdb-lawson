@@ -73,9 +73,12 @@ class HttpJsonSerializer extends HttpSerializer {
   private static TypeReference<ArrayList<IncomingDataPoint>> TR_INCOMING =
     new TypeReference<ArrayList<IncomingDataPoint>>() {};
   
-  /** Type reference for uid assignments */
+  /** Type reference for uid assignments
+   * uid 分配的引用
+   * */
   private static TypeReference<HashMap<String, List<String>>> UID_ASSIGN =
     new TypeReference<HashMap<String, List<String>>>() {};
+
   /** Type reference for common string/string maps */
   private static TypeReference<HashMap<String, String>> TR_HASH_MAP = 
     new TypeReference<HashMap<String, String>>() {};
@@ -192,9 +195,11 @@ class HttpJsonSerializer extends HttpSerializer {
    * @return as hash map of lists for the different types
    * @throws JSONException if parsing failed
    * @throws BadRequestException if the content was missing or parsing failed
+   *
+   * 01.此方法继承自HttpSerializer类中的parseUidAssignV1()
    */
   public HashMap<String, List<String>> parseUidAssignV1() {
-    final String json = query.getContent();
+    final String json = query.getContent();//需要查看一下query的构造过程
     if (json == null || json.isEmpty()) {
       throw new BadRequestException(HttpResponseStatus.BAD_REQUEST,
           "Missing message content",

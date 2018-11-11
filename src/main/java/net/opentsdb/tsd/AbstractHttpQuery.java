@@ -216,6 +216,7 @@ public abstract class AbstractHttpQuery {
       try {
         //Creates a new decoder that decodes the specified URI. The decoder will assume that the query string is encoded in UTF-8.
         //创建一个新的decoder去解码指定的URI。这个解码器将会默认这个query字符串使用utf-8编码
+
         //getUri() :Returns the URI (or path) of this request. 返回这个请求对象的URI(或者path)
         //getParameters():Returns the decoded key-value parameter pairs of the URI.返回从URI中解码出的key-value参数对
         //new 一个QueryStringDecoder，用于解析query中的参数
@@ -230,14 +231,20 @@ public abstract class AbstractHttpQuery {
   
   /**
    * Returns the value of the given query string parameter.
+   * 返回给定查询字符串参数中的值
+   *
    * <p>
    * If this parameter occurs multiple times in the URL, only the last value
    * is returned and others are silently ignored.
+   * 如果这个参数在URL中出现多次，那么只有最后一个值会被返回，并且其它的值将会被忽略
+   *
    * @param paramname Name of the query string parameter to get.
    * @return The value of the parameter or {@code null} if this parameter
    * wasn't passed in the URI.
    */
   public String getQueryStringParam(final String paramname) {
+      //getQueryString()将会返回一个Map<String, List<String>> 类型对象 querystring
+      //然后通过这个querystring 的get()方法获得paramname对应的值
     final List<String> params = getQueryString().get(paramname);
     return params == null ? null : params.get(params.size() - 1);
   }

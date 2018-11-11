@@ -93,7 +93,8 @@ public abstract class UniqueIdFilterPlugin {
       final Map<String, String> tags);
   
   /**
-   * Whether or not the filter should process UIDs. 
+   * Whether or not the filter should process UIDs.
+   * filter是否应该处理UIDs
    * @return True if {@link #allowUIDAssignment(UniqueIdType, String, String, Map)}
    * should be called, false if not.
    */

@@ -155,6 +155,8 @@ final class IncomingDataPoints implements WritableDataPoints {
     //为什么pos = 13？【应该是一个异常情况，正常情况应该是0】
     short pos = (short) Const.SALT_WIDTH();
 
+    //tsdb.metrics.getOrCreateId(metric) 表明的是获取或者创建一个UID
+      //可以看到这里根据config字段的设置，去取metric的UID值
     copyInRowKey(row, pos,
         (tsdb.config.auto_metric() ? tsdb.metrics.getOrCreateId(metric): tsdb.metrics.getId(metric)));
     pos += metric_width;
